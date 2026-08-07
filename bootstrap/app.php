@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Le TLS est terminé par le proxy (Coolify/Traefik) : sans cette
+        // confiance, la redirection HTTPS bouclerait à l'infini derrière lui
+        $middleware->trustProxies(at: '*');
+
         // Dispositif privé : noindex + HTTPS forcé sur toutes les réponses
         $middleware->append(\App\Http\Middleware\SetSecurityHeaders::class);
 

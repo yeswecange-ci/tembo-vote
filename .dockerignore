@@ -1,0 +1,19 @@
+# Reconstruits dans l'image
+/vendor
+/node_modules
+/public/build
+
+# Jamais dans une image
+.env
+.env.*
+!.env.example
+.git
+
+# Inutiles au runtime
+/tests
+/.claude
+/.cursor
+/.phpunit.cache
+presentation-equipe-tembo.pptx
+prompt-claude-code-tembo-selfie-vote.md
+~$*

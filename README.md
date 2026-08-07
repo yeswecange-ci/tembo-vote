@@ -26,6 +26,24 @@ Dimensionnement : prévoir **au moins 15–20 workers PHP-FPM** (300 invités
 sondant la galerie toutes les 3 s ≈ 100 req/s en pointe, servies depuis le
 cache avec ETag/304). OPcache activé, `Xdebug` absent en production.
 
+## Déploiement Coolify (production)
+
+Le dépôt contient un `Dockerfile` prêt pour Coolify :
+
+1. **Build Pack : `Dockerfile`** · branche `main` · **Ports Exposes : `8080`**.
+2. Domaine : `https://tembo-vote.ywcdigital.com` (TLS géré par Coolify —
+   l'app fait confiance au proxy, voir `bootstrap/app.php`).
+3. **Stockage persistant obligatoire** : volume monté sur
+   `/var/www/html/storage/app` (photos, sauvegardes, QR) — sans lui,
+   les photos disparaissent à chaque redéploiement.
+4. Variables d'environnement : voir la liste du `.env.example`
+   (`APP_KEY`, base MariaDB, `SESSION_SECURE_COOKIE=true`, `TEMBO_*`…).
+5. **Scheduled Task Coolify** : commande `php artisan schedule:run`,
+   cron `* * * * *` (déclenche la sauvegarde toutes les 10 min).
+6. Premier déploiement : les migrations tournent automatiquement ;
+   lancer une fois dans le terminal Coolify :
+   `php artisan db:seed --force` puis `php artisan tembo:qr`.
+
 ## Installation
 
 ```bash
