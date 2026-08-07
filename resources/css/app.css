@@ -1,0 +1,213 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+
+/*
+|--------------------------------------------------------------------------
+| Polices auto-hébergées
+|--------------------------------------------------------------------------
+| Fichiers commités dans resources/fonts : aucune dépendance réseau
+| (CDN ou build) le soir de l'événement.
+*/
+@font-face {
+    font-family: 'Archivo';
+    src: url('../fonts/archivo-variable-latin.woff2') format('woff2-variations');
+    font-weight: 100 900;
+    font-stretch: 62% 125%;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Instrument Sans';
+    src: url('../fonts/instrument-sans-400-latin.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Instrument Sans';
+    src: url('../fonts/instrument-sans-500-latin.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('../fonts/jetbrains-mono-500-latin.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@theme {
+    /*
+     * Les couleurs par défaut de Tailwind sont désactivées : si une couleur
+     * n'est pas dans les tokens ci-dessous, elle n'existe pas dans le projet.
+     *
+     * THÈME CLAIR (demande client) : les noms des tokens restent sémantiques —
+     * « nuit » = fond global, « ivoire » = texte principal — seules les valeurs
+     * changent. Le mur LED conserve le thème sombre d'origine via .theme-sombre
+     * (un mur LED en pleine luminosité sur du blanc éblouit la salle).
+     */
+    --color-*: initial;
+
+    /* Fonds — blanc cassé chaud, jamais gris bleuté */
+    --color-nuit: #faf7f2; /* fond global */
+    --color-nuit-haut: #ffffff; /* cartes, surfaces élevées */
+    --color-nuit-bord: #e7e1d6; /* bordures, séparateurs */
+
+    /* Texte — noir chaud */
+    --color-ivoire: #1f1b18; /* texte principal */
+    --color-ivoire-bas: #6e675e; /* texte secondaire */
+
+    /* Marque — extraits du logo officiel */
+    --color-rouge: #c8161d; /* accent d'action, exclusivement (texte crème lisible dessus) */
+    --color-or: #8c734b; /* filets, cadres, ornements — jamais en texte */
+    --color-or-clair: #6e5836; /* l'or quand c'est du texte (lisible sur fond clair) */
+
+    /* Support invariable du logo (rouge sur clair) et du texte sur fond rouge */
+    --color-creme: #f5f1e8;
+
+    /* Échelle typographique fixe : 12 / 14 / 16 / 20 / 26 / 34 / 48 / 72 */
+    --text-*: initial;
+    --text-12: 0.75rem;
+    --text-12--line-height: 1rem;
+    --text-14: 0.875rem;
+    --text-14--line-height: 1.25rem;
+    --text-16: 1rem;
+    --text-16--line-height: 1.5rem;
+    --text-20: 1.25rem;
+    --text-20--line-height: 1.75rem;
+    --text-26: 1.625rem;
+    --text-26--line-height: 2.125rem;
+    --text-34: 2.125rem;
+    --text-34--line-height: 2.5rem;
+    --text-48: 3rem;
+    --text-48--line-height: 1.05;
+    --text-72: 4.5rem;
+    --text-72--line-height: 1;
+
+    /* Polices */
+    --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Mono', monospace;
+
+    /* Interlettrage des titres display (spécification : 0.02em) */
+    --tracking-titre: 0.02em;
+
+    /* Animation n° 1 : apparition des nouvelles photos dans la galerie */
+    --animate-apparition: apparition 240ms ease-out both;
+
+    @keyframes apparition {
+        from {
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Animation n° 3 : révélation du gagnant sur l'écran LED */
+    --animate-revelation: revelation 1200ms ease-in-out both;
+
+    @keyframes revelation {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+}
+
+/*
+ * Style display signature : Archivo étiré (wdth 120), gras, majuscules.
+ * Une seule définition pour tous les titres — aucune improvisation locale.
+ */
+@utility titre {
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 120;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-titre);
+}
+
+/*
+ * Mur LED : la palette sombre d'origine, intégralement conservée.
+ * Les utilitaires Tailwind référencent les variables : les redéfinir ici
+ * bascule tout le sous-arbre de l'écran sans toucher aux vues.
+ */
+.theme-sombre {
+    color-scheme: dark;
+    --color-nuit: #12100f;
+    --color-nuit-haut: #1c1917;
+    --color-nuit-bord: #2a2624;
+    --color-ivoire: #efeae1;
+    --color-ivoire-bas: #8f8880;
+    --color-rouge: #ed1c24;
+    --color-or: #8c734b;
+    --color-or-clair: #c4a56e;
+    --color-creme: #f5f1e8;
+}
+
+@layer base {
+    /* Contrôles natifs (barres de défilement, claviers, sélecteurs) au ton du thème */
+    html {
+        color-scheme: light;
+    }
+
+    /* Sélection de texte aux couleurs de la maison */
+    ::selection {
+        background: var(--color-or);
+        color: var(--color-creme);
+    }
+
+    /* Pas de halo gris au toucher : le retour d'appui vient des états actifs */
+    body {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Le pré-remplissage navigateur (connexion régie) reste sombre.
+       Le box-shadow inset est un masque technique, pas une ombre de design. */
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+        -webkit-box-shadow: 0 0 0 1000px var(--color-nuit-haut) inset;
+        -webkit-text-fill-color: var(--color-ivoire);
+        caret-color: var(--color-ivoire);
+    }
+
+    /* Barres de défilement discrètes (régie sur desktop) */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-nuit-bord) transparent;
+    }
+
+    /* Les blocs pilotés par Alpine restent invisibles avant son démarrage */
+    [x-cloak] {
+        display: none !important;
+    }
+
+    /* Focus clavier visible sur tous les éléments interactifs */
+    :focus-visible {
+        outline: 2px solid var(--color-or-clair);
+        outline-offset: 2px;
+    }
+
+    /* L'accessibilité prime sur les trois animations autorisées */
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+    }
+}
