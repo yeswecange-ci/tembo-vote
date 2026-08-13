@@ -106,8 +106,9 @@ brief) : si le scheduler tombe, la soirée continue.
 
 1. `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true`, HTTPS valide (le
    middleware force la redirection + HSTS en production).
-2. Remplacer les textes juridiques **placeholders** dans `config/tembo.php`
-   (consentements, notice) — 2 minutes, aucune autre modification.
+2. Relire les textes juridiques dans `config/tembo.php` (notice
+   d'information, consommation responsable) — 2 minutes, aucune autre
+   modification.
 3. Vérifier que l'écran LED et la tablette d'entrée affichent le QR : il est
    **dynamique**, il ne peut donc jamais être imprimé (un QR papier resterait
    valable indéfiniment et laisserait entrer n'importe qui, de n'importe où).

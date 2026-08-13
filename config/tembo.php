@@ -113,7 +113,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Textes juridiques — PLACEHOLDERS à remplacer dès réception du client
+    | Textes juridiques
     |--------------------------------------------------------------------------
     | Seules les chaînes ci-dessous sont à modifier, rien d'autre à toucher.
     */
@@ -122,6 +122,6 @@ return [
         'responsible_drinking' => "L'abus d'alcool est dangereux pour la santé. À consommer avec modération.",
 
         // Notice d'information (droit de retrait, contact)
-        'privacy_notice' => "Votre photo n'est visible que par les invités de la soirée. Vous pouvez en demander le retrait à tout moment auprès du personnel. [PLACEHOLDER — texte définitif à fournir par Bracongo]",
+        'privacy_notice' => "Votre photo n'est visible que par les invités de la soirée. Vous pouvez en demander le retrait à tout moment auprès du personnel.",
     ],
 ];
