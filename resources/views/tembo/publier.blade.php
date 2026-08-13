@@ -104,12 +104,6 @@
                 <p class="mt-2 text-12 text-ivoire-bas" x-show="!premiereErreur('display_name')">2 à 24 caractères, affiché sous votre photo.</p>
             </div>
 
-            {{-- Le consentement est donné par l'envoi : la mention reste lue
-                 avant le geste, sans case à cocher qui freine le parcours. --}}
-            <div class="rounded border border-nuit-bord bg-nuit-haut p-4">
-                <p class="text-14 text-ivoire">{{ config('tembo.legal.consent_event') }}</p>
-            </div>
-
             <p class="text-12 text-ivoire-bas">{{ config('tembo.legal.privacy_notice') }}</p>
 
             <div class="mt-auto space-y-4">

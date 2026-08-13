@@ -36,10 +36,10 @@ it('affiche l’écran de capture en phase open', function () {
         ->assertOk()
         ->assertSee('Prendre un selfie')
         ->assertSee('Choisir dans la galerie')
-        // Mention légale lue avant l'envoi, sans case à cocher
-        ->assertSee(config('tembo.legal.consent_event'))
+        // Le formulaire ne demande plus que le prénom : ni case à cocher,
+        // ni mention de consentement
         ->assertDontSee('type="checkbox"', false)
-        // La réutilisation après l'événement n'est plus mentionnée
+        ->assertDontSee('vous acceptez')
         ->assertDontSee('réutilise');
 });
 
