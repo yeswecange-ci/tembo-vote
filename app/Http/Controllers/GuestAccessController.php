@@ -2,109 +2,83 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Phase;
 use App\Http\Middleware\EnsureGuestSession;
 use App\Models\GuestSession;
-use App\Services\PinService;
+use App\Services\AccessTokenService;
 use App\Support\EventPhase;
 use App\Support\Fingerprint;
 use App\Support\GalleryCache;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 
 class GuestAccessController extends Controller
 {
-    public function showPinForm(Request $request, PinService $pinService): View|RedirectResponse
+    /**
+     * Unique porte d'entrée de la soirée : le QR de l'écran porte un jeton
+     * rotatif, le scanner ouvre la session et mène droit à l'action du
+     * moment. Rien à saisir, jamais.
+     */
+    public function enter(Request $request, AccessTokenService $accessTokenService): Response|RedirectResponse
     {
-        // Une session déjà active saute l'écran du code : zéro friction
+        // Une session déjà active n'a rien à rescanner : zéro friction
         $sessionId = $request->cookie(EnsureGuestSession::COOKIE);
 
         if (is_string($sessionId) && GuestSession::query()->find($sessionId)?->isActive()) {
-            return redirect()->route('tembo.accueil');
+            return $this->landing();
         }
 
-        // Accès direct : le QR affiché sur l'écran embarque le code rotatif.
-        // Scanner = entrer, sans rien saisir. La saisie manuelle est le repli
-        // (QR statique des totems, code lu sur l'écran).
-        $code = $request->query('code');
+        $token = $request->query(AccessTokenService::QUERY_PARAM);
 
-        if (is_string($code) && preg_match('/^\d{4}$/', $code) === 1) {
-            $throttleKey = 'pin:'.Fingerprint::ip($request);
-
-            if (! RateLimiter::tooManyAttempts($throttleKey, (int) config('tembo.rate_limits.pin.attempts'))) {
-                if ($pinService->verify($code)) {
-                    RateLimiter::clear($throttleKey);
-
-                    return $this->openGuestSession($request, $code);
-                }
-
-                RateLimiter::hit($throttleKey, (int) config('tembo.rate_limits.pin.decay_minutes') * 60);
-            }
-
-            return redirect()->route('tembo.pin')
-                ->with('message', 'Ce QR code a expiré. Scannez celui actuellement affiché sur l’écran, ou saisissez le code.');
+        if (is_string($token) && $accessTokenService->verify($token)) {
+            return $this->openGuestSession($request, $token);
         }
 
-        return view('tembo.pin');
+        // Sans jeton valide : QR périmé (capture d'écran, lien transmis) ou
+        // arrivée directe sur l'URL. Le seul recours est de rescanner l'écran.
+        return response()->view('tembo.qr-invalide', [
+            'message' => session('message') ?? (is_string($token) && $token !== ''
+                ? 'Ce QR code n’est plus valide : il change toutes les quelques minutes.'
+                : 'Cette page s’ouvre en scannant le QR code affiché sur l’écran de la salle.'),
+        ], 403);
     }
 
-    public function verifyPin(Request $request, PinService $pinService): RedirectResponse
-    {
-        // 4 chiffres se brute-forcent en quelques secondes : blocage par IP,
-        // avec le délai restant annoncé plutôt qu'un refus muet.
-        $throttleKey = 'pin:'.Fingerprint::ip($request);
-        $maxAttempts = (int) config('tembo.rate_limits.pin.attempts');
-
-        if (RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
-            $minutes = max(1, (int) ceil(RateLimiter::availableIn($throttleKey) / 60));
-
-            return back()->withErrors([
-                'code' => "Trop de tentatives. Patientez {$minutes} min, puis réessayez avec le code affiché sur l’écran.",
-            ]);
-        }
-
-        $validated = $request->validate([
-            'code' => ['required', 'digits:4'],
-        ], [
-            'code.required' => 'Saisissez le code à 4 chiffres affiché sur l’écran de la salle.',
-            'code.digits' => 'Le code comporte exactement 4 chiffres.',
-        ]);
-
-        if (! $pinService->verify($validated['code'])) {
-            RateLimiter::hit($throttleKey, (int) config('tembo.rate_limits.pin.decay_minutes') * 60);
-
-            return back()->withErrors([
-                'code' => 'Ce code n’est pas ou plus valide. Vérifiez le code actuellement affiché sur l’écran de la salle.',
-            ]);
-        }
-
-        RateLimiter::clear($throttleKey);
-
-        return $this->openGuestSession($request, $validated['code']);
-    }
-
-    /** Crée la session invité et pose le cookie signé — QR direct et saisie manuelle confondus. */
-    private function openGuestSession(Request $request, string $code): RedirectResponse
+    /** Crée la session invité et pose le cookie signé. */
+    private function openGuestSession(Request $request, string $token): RedirectResponse
     {
         $guestSession = GuestSession::query()->create([
             'device_hash' => Fingerprint::device($request),
             'ip_hash' => Fingerprint::ip($request),
-            'pin_used' => $code,
+            'token_used' => $token,
             'expires_at' => $this->sessionExpiry(),
         ]);
 
-        return redirect()
-            ->route('tembo.accueil')
-            ->withCookie(cookie(
-                name: EnsureGuestSession::COOKIE,
-                value: $guestSession->id,
-                minutes: max(1, (int) now()->diffInMinutes($guestSession->expires_at)),
-                secure: app()->isProduction(),
-                httpOnly: true,
-                sameSite: 'lax',
-            ));
+        return $this->landing()->withCookie(cookie(
+            name: EnsureGuestSession::COOKIE,
+            value: $guestSession->id,
+            minutes: max(1, (int) now()->diffInMinutes($guestSession->expires_at)),
+            secure: app()->isProduction(),
+            httpOnly: true,
+            sameSite: 'lax',
+        ));
+    }
+
+    /**
+     * Le scan mène directement à ce qui est possible à cet instant — publier
+     * pendant la publication, voter pendant le vote. Un écran de moins entre
+     * le QR et la photo envoyée. Hors de ces deux phases, l'accueil explique
+     * où en est la soirée.
+     */
+    private function landing(): RedirectResponse
+    {
+        return redirect()->route(match (EventPhase::current()) {
+            Phase::Open => 'photos.create',
+            Phase::VoteOnly => 'galerie.index',
+            default => 'tembo.accueil',
+        });
     }
 
     public function home(Request $request): View

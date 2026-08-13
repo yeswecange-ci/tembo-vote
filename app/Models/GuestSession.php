@@ -21,7 +21,7 @@ class GuestSession extends Model
     protected $fillable = [
         'device_hash',
         'ip_hash',
-        'pin_used',
+        'token_used',
         'expires_at',
         'revoked_at',
     ];

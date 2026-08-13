@@ -35,7 +35,7 @@ class AuditLog extends Model
             'photo.rejected' => 'Photo refusée',
             'photo.removed' => 'Photo retirée de la galerie',
             'phase.changed' => 'Changement de phase',
-            'pin.rotated' => 'Nouveau code PIN',
+            'token.rotated' => 'Nouveau QR d’accès',
             default => $this->action,
         };
     }

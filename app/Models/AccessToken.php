@@ -2,22 +2,22 @@
 
 namespace App\Models;
 
-use Database\Factories\AccessPinFactory;
+use Database\Factories\AccessTokenFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class AccessPin extends Model
+class AccessToken extends Model
 {
-    /** @use HasFactory<AccessPinFactory> */
+    /** @use HasFactory<AccessTokenFactory> */
     use HasFactory;
 
-    /** Un PIN ne se modifie jamais : il naît, il expire. */
+    /** Un jeton ne se modifie jamais : il naît, il expire. */
     public const UPDATED_AT = null;
 
     protected $fillable = [
-        'code',
+        'token',
         'valid_from',
         'valid_until',
     ];
@@ -31,9 +31,9 @@ class AccessPin extends Model
     }
 
     /**
-     * Codes acceptés à cet instant (2 codes en glissement pendant la rotation).
+     * Jetons acceptés à cet instant (2 jetons en glissement pendant la rotation).
      *
-     * @param  Builder<AccessPin>  $query
+     * @param  Builder<AccessToken>  $query
      */
     #[Scope]
     protected function currentlyValid(Builder $query): void

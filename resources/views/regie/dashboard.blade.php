@@ -1,4 +1,4 @@
-{{-- Vue d'ensemble : les chiffres qui comptent, le PIN, la phase, l'activité --}}
+{{-- Vue d'ensemble : les chiffres qui comptent, le QR d'accès, la phase, l'activité --}}
 <x-layouts.admin title="Tableau de bord" actif="regie.dashboard" :en-attente="$pendingCount">
     <div class="flex flex-col gap-6">
 
@@ -29,14 +29,16 @@
         </div>
 
         <div class="grid gap-3 lg:grid-cols-2">
-            {{-- PIN courant --}}
-            <div class="rounded border border-nuit-bord bg-nuit-haut p-4 text-center">
-                <p class="text-14 text-ivoire-bas">Code d’accès affiché en salle</p>
-                <p class="font-mono text-48 text-or-clair">{{ $pin->code }}</p>
-                <p class="text-12 text-ivoire-bas">
-                    valable jusqu’à {{ $pin->valid_until->format('H\hi') }} ·
-                    nouveau code toutes les {{ config('tembo.pin.rotation_minutes') }} min
-                </p>
+            {{-- QR d'accès courant : le même que sur l'écran de la salle --}}
+            <div class="flex items-center gap-4 rounded border border-nuit-bord bg-nuit-haut p-4">
+                <img src="{{ $qr }}" alt="QR code d’accès à la soirée" class="size-24 shrink-0 rounded bg-creme p-1">
+                <div>
+                    <p class="text-14 text-ivoire-bas">QR d’accès affiché en salle</p>
+                    <p class="text-12 text-ivoire-bas">
+                        valable jusqu’à {{ $accessToken->valid_until->format('H\hi') }} ·
+                        nouveau QR toutes les {{ config('tembo.access.rotation_minutes') }} min
+                    </p>
+                </div>
             </div>
 
             {{-- Phase courante --}}

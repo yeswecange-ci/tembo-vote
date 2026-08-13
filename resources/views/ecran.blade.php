@@ -12,25 +12,22 @@
         class="relative flex h-full flex-col"
     >
         {{--
-            Accès en permanence dans le coin, compact pour tenir dans la hauteur
-            de l'en-tête : QR (scanner = entrer) + code en repli, lisibles du
-            fond de la salle.
+            Accès en permanence dans le coin : le QR est le seul chemin
+            d'entrée, il doit rester scannable depuis le fond de la salle.
         --}}
         <div
             class="absolute right-[2vw] top-[2.5vh] z-10 flex items-center gap-[1.2vw]"
             x-show="!['setup', 'reveal', 'closed'].includes(phase)"
             @if (in_array($initial['phase'], ['setup', 'reveal', 'closed'])) style="display: none" @endif
         >
-            <div class="text-right">
-                <p class="text-[clamp(0.7rem,1.5vh,1.2rem)] uppercase text-ivoire-bas">Scannez pour entrer</p>
-                <p class="mt-[1.2vh] text-[clamp(0.65rem,1.3vh,1rem)] text-ivoire-bas">ou saisissez le code</p>
-                <p class="font-mono text-[clamp(1.5rem,4.2vh,3.5rem)] leading-none text-or-clair" x-text="pin">{{ $initial['pin'] }}</p>
-            </div>
+            <p class="text-right text-[clamp(0.7rem,1.5vh,1.2rem)] uppercase text-ivoire-bas">
+                Scannez<br>pour entrer
+            </p>
             <img
                 :src="qr"
                 src="{{ $initial['qr'] }}"
                 alt="QR code d’accès à la soirée"
-                class="w-[9vmin] shrink-0 rounded bg-creme p-[0.6vmin]"
+                class="w-[12vmin] shrink-0 rounded bg-creme p-[0.6vmin]"
             >
         </div>
 
@@ -39,7 +36,7 @@
             <span class="block size-[1.4vh] rounded-full bg-or"></span>
         </div>
 
-        {{-- ===== Attente (setup) : logo + consigne + PIN géant ===== --}}
+        {{-- ===== Attente (setup) : logo + consigne + QR géant ===== --}}
         <section
             x-show="phase === 'setup'"
             @if ($initial['phase'] !== 'setup') style="display: none" @endif
@@ -55,17 +52,13 @@
             <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">
                 Scannez le QR code : vous entrez directement, sans rien saisir.
             </p>
-            {{-- QR d'accès direct, régénéré avec le code toutes les 20 minutes --}}
+            {{-- QR d'accès, renouvelé toutes les 5 minutes par le polling --}}
             <img
                 :src="qr"
                 src="{{ $initial['qr'] }}"
                 alt="QR code d’accès à la soirée"
-                class="w-[26vmin] rounded bg-creme p-[1.2vmin]"
+                class="w-[34vmin] rounded bg-creme p-[1.2vmin]"
             >
-            <div>
-                <p class="text-[clamp(0.875rem,2vh,1.5rem)] text-ivoire-bas">ou saisissez le code d’accès</p>
-                <p class="font-mono text-[clamp(3rem,10vh,9rem)] leading-none text-or-clair" x-text="pin">{{ $initial['pin'] }}</p>
-            </div>
         </section>
 
         {{-- ===== Classement live (open / vote_only / frozen) ===== --}}
@@ -75,7 +68,7 @@
             class="flex min-h-0 flex-1 flex-col"
         >
             {{--
-                Marge latérale de 26vw (le titre ne passe jamais sous le PIN) et
+                Marge latérale de 26vw (le titre ne passe jamais sous le QR) et
                 échelle en vmin : la même mise en page tient en paysage comme en
                 portrait 3:4, la résolution du mur n'étant pas confirmée.
             --}}

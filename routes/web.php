@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Route;
 // Le QR affiché en salle mène à /tembo : la racine y renvoie aussi
 Route::redirect('/', '/tembo');
 
-Route::get('/tembo', [GuestAccessController::class, 'showPinForm'])->name('tembo.pin');
-Route::post('/tembo', [GuestAccessController::class, 'verifyPin'])->name('tembo.pin.verifier');
+// Entrée unique : le jeton du QR en paramètre, aucune saisie possible
+Route::get('/tembo', [GuestAccessController::class, 'enter'])->name('tembo.entree');
 
 Route::middleware('guest.session')->group(function () {
     Route::get('/tembo/accueil', [GuestAccessController::class, 'home'])->name('tembo.accueil');

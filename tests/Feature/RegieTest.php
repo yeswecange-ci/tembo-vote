@@ -2,7 +2,7 @@
 
 use App\Enums\Phase;
 use App\Enums\PhotoStatus;
-use App\Models\AccessPin;
+use App\Models\AccessToken;
 use App\Models\AuditLog;
 use App\Models\Photo;
 use App\Models\User;
@@ -31,8 +31,8 @@ it('connecte un modérateur et le journalise', function () {
     expect(AuditLog::query()->where('action', 'regie.login')->where('actor', 'Christian')->exists())->toBeTrue();
 });
 
-it('présente le tableau de bord : chiffres, PIN, phase et dernières actions', function () {
-    AccessPin::factory()->create(['code' => '4827']);
+it('présente le tableau de bord : chiffres, QR d’accès, phase et dernières actions', function () {
+    AccessToken::factory()->create();
     Photo::factory()->count(2)->create();
     Photo::factory()->approved()->create();
     AuditLog::write('photo.approved', 'Hadassa', 'photo', 'x');
@@ -41,7 +41,7 @@ it('présente le tableau de bord : chiffres, PIN, phase et dernières actions', 
         ->assertOk()
         ->assertSee('en attente')
         ->assertSee('en ligne')
-        ->assertSee('4827')
+        ->assertSee('data:image/svg+xml;base64,', false)
         ->assertSee('Préparation')
         ->assertSee('Photo validée')
         ->assertSee('Hadassa');
@@ -233,12 +233,12 @@ it('refuse une phase inconnue', function () {
         ->assertSessionHasErrors('phase');
 });
 
-it('affiche le PIN courant et les 6 phases sur la page Soirée', function () {
-    $pin = AccessPin::factory()->create(['code' => '4827']);
+it('affiche le QR d’accès courant et les 6 phases sur la page Soirée', function () {
+    AccessToken::factory()->create();
 
     $reponse = $this->actingAs($this->moderator)->get(route('regie.soiree'));
 
-    $reponse->assertOk()->assertSee('4827');
+    $reponse->assertOk()->assertSee('data:image/svg+xml;base64,', false);
 
     foreach (Phase::cases() as $phase) {
         $reponse->assertSee($phase->label());

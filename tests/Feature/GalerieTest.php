@@ -38,7 +38,7 @@ it('affiche la galerie avec la barre fixe et l’accès au classement', function
 });
 
 it('exige une session pour la galerie et répond 401 en JSON au polling expiré', function () {
-    $this->get(route('galerie.index'))->assertRedirect(route('tembo.pin'));
+    $this->get(route('galerie.index'))->assertRedirect(route('tembo.entree'));
 
     $expiree = GuestSession::factory()->expired()->create();
     $this->withCookie(EnsureGuestSession::COOKIE, $expiree->id)

@@ -5,7 +5,7 @@ Cahier des charges complet : `prompt-claude-code-tembo-selfie-vote.md` (fait aut
 
 ## Les 6 contraintes non négociables
 
-**Accès (décision client du 7/08)** : le QR dynamique affiché sur l'écran LED embarque le code rotatif → scanner = entrer directement (`/tembo?code=XXXX`). La saisie manuelle du PIN est le **repli** (QR statique des totems, code lu sur l'écran).
+**Accès (décision client du 13/08, remplace celle du 7/08)** : **un seul QR, dynamique, affiché sur écran — jamais sur papier**. Il embarque un jeton opaque de 32 caractères, renouvelé toutes les 5 minutes (2 jetons valides en glissement) : scanner = entrer (`/tembo?t=JETON`), et un QR photographié puis partagé hors de la salle est mort en 10 minutes au plus. **Aucune saisie manuelle, aucun code affiché, aucun repli** : le PIN à 4 chiffres et la commande `tembo:qr` (QR imprimable) ont été supprimés. Le scan mène droit à l'action de la phase courante — publication en `open`, galerie en `vote_only`, accueil sinon.
 
 1. **Événement unique** — soirée du 14/08/2026, 5 heures, aucune seconde chance. La robustesse prime sur l'élégance architecturale.
 2. **8 jours de dev** — zéro over-engineering, aucune abstraction « au cas où ».

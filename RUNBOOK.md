@@ -25,25 +25,32 @@ Régie → onglet **Soirée** → un bouton par phase, **un seul clic, effet imm
 
 Ordre normal de la soirée :
 
-1. **Préparation** — l'écran affiche le code d'accès, rien n'est ouvert.
+1. **Préparation** — l'écran affiche le QR d'accès, rien n'est ouvert.
 2. **Publication + vote** — au lancement : les invités publient et votent.
 3. **Vote seul** — optionnel : on arrête les nouvelles photos, les votes continuent.
 4. **Votes clos** — le classement se fige (« VOTES CLOS » sur l'écran).
 5. **Révélation** — la photo gagnante en grand sur l'écran (voir section 7).
 6. **Terminé** — écran de remerciement.
 
-## 2. Comment les invités entrent (QR + code)
+## 2. Comment les invités entrent (un seul QR, dynamique)
 
-**Le chemin normal : scanner le QR affiché sur l'écran LED** — il fait entrer
-directement, sans rien saisir. Il se régénère avec le code toutes les 20 minutes.
+**Scanner le QR affiché sur l'écran fait entrer directement**, sans rien
+saisir, et mène droit à l'action du moment : publier sa photo pendant la
+publication, voter pendant le vote. Il n'existe aucun autre chemin — plus
+aucun code à taper, plus aucun QR sur papier.
 
-**Le repli : le code à 4 chiffres** (affiché à côté du QR), à saisir sur la
-page d'accès. Le code change automatiquement **toutes les 20 minutes**
-(l'ancien reste valable 20 minutes de plus — personne n'est rejeté au changement).
+**Le QR change tout seul toutes les 5 minutes** (l'ancien reste valable
+5 minutes de plus, personne n'est rejeté au changement). C'est ce qui
+empêche une photo du QR envoyée à l'extérieur de servir toute la soirée.
 
-- Sur **l'écran LED** : QR + code en haut à droite, en permanence.
-- Dans la **régie** : Tableau de bord ou onglet Soirée, en gros chiffres or.
-- Si le mur LED est en panne : lisez le code dans la régie et annoncez-le au micro.
+- Sur **l'écran LED** : QR en haut à droite, en permanence.
+- Sur la **tablette d'entrée** : page QR plein écran (`/ecran/CLÉ/qr`).
+- Dans la **régie** : Tableau de bord ou onglet Soirée — le même QR, scannable
+  directement sur le poste si le mur LED tombe.
+- Un invité tombe sur « ce QR n'est plus valide » : il a scanné une capture
+  d'écran ou un lien transmis. Faites-le rescanner l'écran, c'est tout.
+- **Si un QR fuite** (partage massif hors de la salle) : `php artisan
+  tembo:rotate-token` coupe court immédiatement.
 
 ## 3. Retirer une photo en urgence
 
@@ -121,10 +128,11 @@ Régie → onglet **Révélation**, tout est guidé :
 ## 9. Avant la soirée — répétition du 13 août
 
 - [ ] `https://LE-DOMAINE/tembo` s'ouvre en 4G (pas seulement en Wi-Fi).
-- [ ] Le QR imprimé sur les totems mène bien à cette adresse.
+- [ ] Le QR de l'écran et celui de la tablette d'entrée font entrer en un scan.
 - [ ] Connexion régie OK pour Christian **et** Hadassa, sur leur téléphone.
-- [ ] L'écran LED affiche l'attente + le PIN à la résolution réelle du mur.
-- [ ] Parcours complet : PIN → selfie → modération → galerie → vote → écran.
+- [ ] L'écran LED affiche l'attente + le QR à la résolution réelle du mur,
+      scannable depuis le fond de la salle.
+- [ ] Parcours complet : scan → selfie → modération → galerie → vote → écran.
 - [ ] Une révélation de test, puis remise en phase « Préparation ».
 - [ ] Les sauvegardes tournent (régie → demander au référent technique).
 - [ ] Les numéros de la section 6 sont remplis et enregistrés dans les téléphones.

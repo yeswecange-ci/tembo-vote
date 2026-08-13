@@ -10,7 +10,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             ModeratorSeeder::class,
-            AccessPinSeeder::class,
+            AccessTokenSeeder::class,
             SettingSeeder::class,
         ]);
     }

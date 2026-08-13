@@ -16,16 +16,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Accès invité (QR + PIN rotatif)
+    | Accès invité (QR rotatif, affiché sur écran — jamais sur papier)
     |--------------------------------------------------------------------------
+    | Le QR est le seul chemin d'entrée : le scanner ouvre la session, il n'y
+    | a rien à saisir. Sa rotation est ce qui limite la portée d'un QR
+    | photographié puis partagé hors de la salle.
     */
-    'pin' => [
-        // Durée de vie d'un code avant rotation
-        'rotation_minutes' => 20,
-        // Nombre de codes acceptés simultanément : sans chevauchement, l'invité
-        // qui scanne pile au moment du changement se fait rejeter et abandonne
-        'valid_codes' => 2,
-        'length' => 4,
+    'access' => [
+        // Un QR capturé en photo cesse de fonctionner au bout de
+        // rotation_minutes × valid_tokens, soit 10 minutes au maximum
+        'rotation_minutes' => 5,
+        // Nombre de jetons acceptés simultanément : sans chevauchement, l'invité
+        // qui scanne pile au moment de la rotation se fait rejeter et abandonne
+        'valid_tokens' => 2,
+        // Plus personne ne saisit ce jeton à la main : il n'a aucune raison
+        // d'être court, et cette longueur le rend indevinable
+        'token_length' => 32,
     ],
 
     // Expiration de toutes les sessions invité, heure de Kinshasa.
@@ -38,8 +44,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'rate_limits' => [
-        // 4 chiffres se brute-forcent en quelques secondes sans ce verrou
-        'pin' => ['attempts' => 5, 'decay_minutes' => 10],
+        // Aucun verrou sur l'entrée : le jeton du QR n'est pas devinable, et
+        // toute la salle partage la même IP publique — un blocage par IP y
+        // ferait tomber les invités légitimes en pleine arrivée.
         'upload' => ['attempts' => 3, 'decay_minutes' => 1],
         'vote' => ['attempts' => 10, 'decay_minutes' => 1],
         'admin_login' => ['attempts' => 5, 'decay_minutes' => 10],

@@ -2,24 +2,25 @@
 
 namespace Database\Factories;
 
-use App\Models\AccessPin;
+use App\Models\AccessToken;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends Factory<AccessPin>
+ * @extends Factory<AccessToken>
  */
-class AccessPinFactory extends Factory
+class AccessTokenFactory extends Factory
 {
     /**
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        // Un PIN vit deux fenêtres de rotation : 2 codes valides en glissement
-        $lifetimeMinutes = config('tembo.pin.rotation_minutes') * config('tembo.pin.valid_codes');
+        // Un jeton vit deux fenêtres de rotation : 2 jetons valides en glissement
+        $lifetimeMinutes = config('tembo.access.rotation_minutes') * config('tembo.access.valid_tokens');
 
         return [
-            'code' => str_pad((string) $this->faker->numberBetween(0, 9999), 4, '0', STR_PAD_LEFT),
+            'token' => Str::random((int) config('tembo.access.token_length')),
             'valid_from' => now(),
             'valid_until' => now()->addMinutes($lifetimeMinutes),
         ];

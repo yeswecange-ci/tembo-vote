@@ -5,13 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Photo;
 use App\Models\Setting;
 use App\Models\Vote;
-use App\Services\PinService;
+use App\Services\AccessTokenService;
 use App\Support\EventPhase;
-use Endroid\QrCode\Builder\Builder;
-use Endroid\QrCode\ErrorCorrectionLevel;
-use Endroid\QrCode\Writer\SvgWriter;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 /**
@@ -21,13 +17,13 @@ use Illuminate\View\View;
  */
 class ScreenController extends Controller
 {
-    public function show(string $cle, PinService $pinService): View
+    public function show(string $cle, AccessTokenService $accessTokenService): View
     {
         $this->verifierCle($cle);
 
         return view('ecran', [
             'cle' => $cle,
-            'initial' => $this->payload($pinService),
+            'initial' => $this->payload($accessTokenService),
         ]);
     }
 
@@ -35,32 +31,30 @@ class ScreenController extends Controller
      * Page dédiée au QR d'accès : plein écran, toujours affiché quelle que
      * soit la phase — pour une tablette à l'entrée ou un second écran.
      */
-    public function qrPage(string $cle, PinService $pinService): View
+    public function qrPage(string $cle, AccessTokenService $accessTokenService): View
     {
         $this->verifierCle($cle);
 
         return view('ecran-qr', [
             'cle' => $cle,
-            'initial' => $this->payload($pinService),
+            'initial' => $this->payload($accessTokenService),
         ]);
     }
 
     /** Polling toutes les 2 secondes depuis l'écran. */
-    public function state(string $cle, PinService $pinService): JsonResponse
+    public function state(string $cle, AccessTokenService $accessTokenService): JsonResponse
     {
         $this->verifierCle($cle);
 
-        return response()->json($this->payload($pinService))
+        return response()->json($this->payload($accessTokenService))
             ->header('Cache-Control', 'no-store');
     }
 
     /**
-     * @return array{phase: string, pin: string, qr: string, top: array<int, array<string, mixed>>, stats: array{photos: int, votes: int}}
+     * @return array{phase: string, qr: string, top: array<int, array<string, mixed>>, stats: array{photos: int, votes: int}}
      */
-    private function payload(PinService $pinService): array
+    private function payload(AccessTokenService $accessTokenService): array
     {
-        $pin = $pinService->current();
-
         $top = Photo::query()
             ->approved()
             ->orderByDesc('votes_count')
@@ -79,10 +73,9 @@ class ScreenController extends Controller
 
         return [
             'phase' => EventPhase::current()->value,
-            'pin' => $pin->code,
-            // QR d'accès direct : il embarque le code rotatif courant —
-            // scanner l'écran fait entrer sans rien saisir, le PIN est le repli
-            'qr' => $this->qrDataUri($pin->code),
+            // Unique porte d'entrée : le QR embarque le jeton rotatif courant.
+            // Le polling (2 s) le renouvelle donc bien avant sa péremption.
+            'qr' => $accessTokenService->qrDataUri($accessTokenService->current()),
             'top' => $top,
             // Le gagnant révélé est celui validé par un humain en régie ;
             // à défaut, le premier du classement courant
@@ -118,22 +111,6 @@ class ScreenController extends Controller
             'plein' => $photo->signedImageUrl('plein'),
             'votes' => $photo->votes_count,
         ];
-    }
-
-    /** QR en data URI SVG, mis en cache par code (un nouveau toutes les 20 min). */
-    private function qrDataUri(string $code): string
-    {
-        return Cache::remember('tembo.qr.'.$code, 3600, function () use ($code): string {
-            $svg = (new Builder(
-                writer: new SvgWriter,
-                data: route('tembo.pin', ['code' => $code]),
-                errorCorrectionLevel: ErrorCorrectionLevel::Medium,
-                size: 480,
-                margin: 12,
-            ))->build();
-
-            return 'data:image/svg+xml;base64,'.base64_encode($svg->getString());
-        });
     }
 
     private function verifierCle(string $cle): void

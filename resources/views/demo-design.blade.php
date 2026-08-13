@@ -95,8 +95,8 @@
                 <p class="text-12 text-ivoire-bas">JetBrains Mono 500 · chiffres : la chasse fixe empêche la largeur de sauter en animation</p>
                 <div class="mt-3 flex flex-wrap items-end gap-6">
                     <div>
-                        <p class="text-12 text-ivoire-bas">Code PIN</p>
-                        <p class="font-mono text-48 text-ivoire">4827</p>
+                        <p class="text-12 text-ivoire-bas">Photos</p>
+                        <p class="font-mono text-48 text-ivoire">248</p>
                     </div>
                     <div>
                         <p class="text-12 text-ivoire-bas">Votes</p>
@@ -150,12 +150,10 @@
             />
 
             <x-champ
-                label="Code d'accès"
-                name="demo-pin"
-                inputmode="numeric"
-                placeholder="0000"
-                class="font-mono text-center text-26"
-                erreur="Ce code n'est plus valide. Saisissez le nouveau code affiché sur l'écran de la salle."
+                label="Champ en erreur"
+                name="demo-erreur"
+                placeholder="Aïcha"
+                erreur="Ce prénom dépasse 24 caractères. Raccourcissez-le pour continuer."
             />
 
             <x-champ

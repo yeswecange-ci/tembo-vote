@@ -1,8 +1,8 @@
 {{--
     Page dédiée au QR d'accès — tablette à l'entrée ou second écran.
-    Toujours affichée, quelle que soit la phase de la soirée. Le QR et le
-    code se rafraîchissent seuls (rotation toutes les 20 minutes), et la
-    page réutilise le composant écran : mêmes réflexes de résilience.
+    Toujours affichée, quelle que soit la phase de la soirée. Le QR se
+    rafraîchit seul (rotation toutes les 5 minutes), et la page réutilise
+    le composant écran : mêmes réflexes de résilience.
 --}}
 <x-layouts.screen title="Accès — Soirée Club Tembo">
     <div
@@ -34,13 +34,8 @@
                 :src="qr"
                 src="{{ $initial['qr'] }}"
                 alt="QR code d’accès à la soirée"
-                class="w-[34vmin] rounded bg-creme p-[1.4vmin]"
+                class="w-[46vmin] rounded bg-creme p-[1.4vmin]"
             >
-
-            <div>
-                <p class="text-[clamp(0.875rem,2vh,1.5rem)] text-ivoire-bas">ou saisissez le code d’accès</p>
-                <p class="font-mono text-[clamp(2.5rem,9vh,8rem)] leading-none text-or-clair" x-text="pin">{{ $initial['pin'] }}</p>
-            </div>
         </section>
 
         <footer class="flex h-[6.5vh] shrink-0 items-center justify-center border-t border-nuit-bord px-[2.5vw] text-[clamp(0.75rem,1.9vh,1.5rem)] text-ivoire-bas">

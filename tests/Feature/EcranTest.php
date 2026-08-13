@@ -1,7 +1,7 @@
 <?php
 
 use App\Enums\Phase;
-use App\Models\AccessPin;
+use App\Models\AccessToken;
 use App\Models\Photo;
 use App\Models\Vote;
 use App\Support\EventPhase;
@@ -15,12 +15,12 @@ it('refuse l’écran et son API sans la bonne clé', function () {
     $this->getJson('/api/ecran/mauvaise-cle')->assertForbidden();
 });
 
-it('affiche l’écran d’attente avec le PIN en phase setup', function () {
-    $pin = AccessPin::factory()->create(['code' => '4827']);
+it('affiche l’écran d’attente avec le QR d’accès en phase setup', function () {
+    AccessToken::factory()->create();
 
     $this->get(route('ecran', ['cle' => $this->cle]))
         ->assertOk()
-        ->assertSee('4827')
+        ->assertSee('data:image/svg+xml;base64,', false)
         ->assertSee('Soirée Club Tembo')
         ->assertSee(config('tembo.legal.responsible_drinking'));
 });
@@ -36,8 +36,7 @@ it('expose le classement complet en JSON pour le polling', function () {
     $reponse = $this->getJson(route('api.ecran', ['cle' => $this->cle]))->assertOk();
 
     expect($reponse->json('phase'))->toBe('open')
-        ->and($reponse->json('pin'))->toMatch('/^\d{4}$/')
-        // QR d'accès direct embarquant le code rotatif
+        // Unique porte d'entrée : le QR embarque le jeton rotatif
         ->and($reponse->json('qr'))->toStartWith('data:image/svg+xml;base64,')
         // Top 5 seulement, mené par la photo la plus votée
         ->and($reponse->json('top'))->toHaveCount(5)
@@ -82,20 +81,22 @@ it('rend les sections révélation et remerciement selon la phase', function () 
 });
 
 it('sert la page dédiée au QR d’accès, protégée par la même clé', function () {
-    AccessPin::factory()->create(['code' => '4827']);
+    AccessToken::factory()->create();
 
     $this->get(route('ecran.qr', ['cle' => $this->cle]))
         ->assertOk()
         ->assertSee('Scannez pour publier votre selfie')
-        ->assertSee('4827')
-        ->assertSee('data:image/svg+xml;base64,', false);
+        ->assertSee('data:image/svg+xml;base64,', false)
+        // Plus aucun code à saisir nulle part
+        ->assertDontSee('saisissez le code');
 
     $this->get('/ecran/mauvaise-cle/qr')->assertForbidden();
 });
 
-it('génère un PIN à la volée pour l’écran si aucun n’est valide', function () {
-    // Aucun PIN en base : l'écran ne doit jamais afficher un code vide
+it('génère un jeton à la volée pour l’écran si aucun n’est valide', function () {
+    // Aucun jeton en base : l'écran ne doit jamais afficher un QR vide
     $reponse = $this->getJson(route('api.ecran', ['cle' => $this->cle]));
 
-    expect($reponse->json('pin'))->toMatch('/^\d{4}$/');
+    expect($reponse->json('qr'))->toStartWith('data:image/svg+xml;base64,')
+        ->and(AccessToken::query()->currentlyValid()->count())->toBe(1);
 });

@@ -12,7 +12,6 @@
 export default function ecran() {
     return {
         phase: 'setup',
-        pin: '',
         qr: '',
         top: [],
         gagnantValide: null,
@@ -53,7 +52,7 @@ export default function ecran() {
 
         appliquer(donnees, initiale) {
             this.phase = donnees.phase;
-            this.pin = donnees.pin;
+            // Le QR change toutes les 5 minutes : c'est le polling qui le renouvelle
             this.qr = donnees.qr;
             this.stats = donnees.stats;
             this.gagnantValide = donnees.gagnant ?? null;

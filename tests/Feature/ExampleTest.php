@@ -1,10 +1,9 @@
 <?php
 
 test('the application returns a successful response', function () {
-    // La racine redirige vers l'écran d'accès /tembo (parcours QR)
-    $response = $this->get('/');
+    // La racine redirige vers l'entrée /tembo, qui n'ouvre qu'avec le
+    // jeton du QR : sans lui, la porte reste fermée (403).
+    $this->get('/')->assertRedirect('/tembo');
 
-    $response->assertRedirect('/tembo');
-
-    $this->get('/tembo')->assertStatus(200);
+    $this->get('/tembo')->assertForbidden();
 });

@@ -42,7 +42,7 @@ Le dépôt contient un `Dockerfile` prêt pour Coolify :
    cron `* * * * *` (déclenche la sauvegarde toutes les 10 min).
 6. Premier déploiement : les migrations tournent automatiquement ;
    lancer une fois dans le terminal Coolify :
-   `php artisan db:seed --force` puis `php artisan tembo:qr`.
+   `php artisan db:seed --force`.
 
 ## Installation
 
@@ -53,7 +53,7 @@ cp .env.example .env
 php artisan key:generate
 # … renseigner le .env (voir ci-dessous) …
 php artisan migrate --force
-php artisan db:seed --force        # 2 modérateurs, 1 PIN, phase « setup »
+php artisan db:seed --force        # 2 modérateurs, 1 jeton d'accès, phase « setup »
 npm ci && npm run build
 php artisan config:cache && php artisan route:cache && php artisan view:cache
 ```
@@ -97,8 +97,7 @@ brief) : si le scheduler tombe, la soirée continue.
 
 | Commande | Rôle |
 |---|---|
-| `php artisan tembo:qr` | Génère le QR d'accès (PNG + SVG) — vérifier `APP_URL` avant |
-| `php artisan tembo:rotate-pin` | Force un nouveau code PIN immédiatement |
+| `php artisan tembo:rotate-token` | Force un nouveau QR d'accès immédiatement — à lancer si un QR a fuité |
 | `php artisan tembo:backup` | Sauvegarde la base (appelée par le scheduler) |
 | `php artisan tembo:purge --force` | Purge post-événement (conserve les photos avec consentement de réutilisation) |
 | `php artisan tembo:test-charge --url=…` | Test de charge : 300 sessions, pic d'uploads, votes, polling |
@@ -109,8 +108,9 @@ brief) : si le scheduler tombe, la soirée continue.
    middleware force la redirection + HSTS en production).
 2. Remplacer les textes juridiques **placeholders** dans `config/tembo.php`
    (consentements, notice) — 2 minutes, aucune autre modification.
-3. `php artisan tembo:qr` avec l'`APP_URL` de production → fichiers dans
-   `storage/app/private/qr/` à transmettre aux graphistes.
+3. Vérifier que l'écran LED et la tablette d'entrée affichent le QR : il est
+   **dynamique**, il ne peut donc jamais être imprimé (un QR papier resterait
+   valable indéfiniment et laisserait entrer n'importe qui, de n'importe où).
 4. `php artisan tembo:test-charge --url=https://le-domaine` depuis une
    machine séparée, et comparer aux chiffres de référence.
 5. Répétition du 13 août : dérouler la checklist du RUNBOOK section 9.

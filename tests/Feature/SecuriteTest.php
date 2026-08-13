@@ -5,8 +5,9 @@ it('redirige la racine vers l’écran d’accès', function () {
 });
 
 it('interdit l’indexation sur toutes les réponses', function () {
+    // Même une réponse d'accès refusé porte l'en-tête
     $this->get('/tembo')
-        ->assertOk()
+        ->assertForbidden()
         ->assertHeader('X-Robots-Tag', 'noindex, nofollow, noarchive');
 });
 

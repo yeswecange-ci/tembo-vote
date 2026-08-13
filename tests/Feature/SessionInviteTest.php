@@ -8,26 +8,26 @@ use App\Models\Vote;
 use App\Support\EventPhase;
 use App\Support\GalleryCache;
 
-it('renvoie vers la saisie du code sans session', function () {
+it('renvoie vers l’entrée sans session', function () {
     $this->get(route('tembo.accueil'))
-        ->assertRedirect(route('tembo.pin'))
+        ->assertRedirect(route('tembo.entree'))
         ->assertSessionHas('message');
 });
 
-it('renvoie vers la saisie du code quand la session a expiré', function () {
+it('renvoie vers l’entrée quand la session a expiré', function () {
     $guestSession = GuestSession::factory()->expired()->create();
 
     $this->withCookie(EnsureGuestSession::COOKIE, $guestSession->id)
         ->get(route('tembo.accueil'))
-        ->assertRedirect(route('tembo.pin'));
+        ->assertRedirect(route('tembo.entree'));
 });
 
-it('renvoie vers la saisie du code quand la session est révoquée', function () {
+it('renvoie vers l’entrée quand la session est révoquée', function () {
     $guestSession = GuestSession::factory()->revoked()->create();
 
     $this->withCookie(EnsureGuestSession::COOKIE, $guestSession->id)
         ->get(route('tembo.accueil'))
-        ->assertRedirect(route('tembo.pin'));
+        ->assertRedirect(route('tembo.entree'));
 });
 
 it('affiche l’accueil et ses deux actions avec une session active', function () {
@@ -76,7 +76,7 @@ it('présente un accueil riche : comment ça marche, ma participation, ambiance'
         ->assertSee('déjà dans la galerie');
 });
 
-it('saute l’écran du code quand la session est déjà active', function () {
+it('n’exige pas de rescanner quand la session est déjà active', function () {
     $guestSession = GuestSession::factory()->create();
 
     $this->withCookie(EnsureGuestSession::COOKIE, $guestSession->id)

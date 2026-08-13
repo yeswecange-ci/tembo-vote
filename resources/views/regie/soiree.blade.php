@@ -4,7 +4,7 @@
 
 {{--
     Pilotage de la soirée : la phase change en un clic, sans confirmation —
-    le régisseur est pressé et dans le noir. Le PIN courant reste lisible
+    le régisseur est pressé et dans le noir. Le QR d'accès reste scannable
     ici même si le mur LED tombe.
 --}}
 <x-layouts.admin title="Soirée" actif="regie.soiree" :en-attente="$pendingCount">
@@ -13,13 +13,14 @@
             <x-alerte type="succes">{{ session('succes') }}</x-alerte>
         @endif
 
-        {{-- PIN courant : le plan B si l'écran de la salle est en panne --}}
-        <div class="rounded border border-nuit-bord bg-nuit-haut p-4 text-center">
-            <p class="text-14 text-ivoire-bas">Code d’accès affiché en salle</p>
-            <p class="font-mono text-72 text-or-clair">{{ $pin->code }}</p>
+        {{-- QR d'accès : le plan B si l'écran de la salle est en panne —
+             un invité peut le scanner directement sur ce poste --}}
+        <div class="flex flex-col items-center gap-3 rounded border border-nuit-bord bg-nuit-haut p-4 text-center">
+            <p class="text-14 text-ivoire-bas">QR d’accès affiché en salle</p>
+            <img src="{{ $qr }}" alt="QR code d’accès à la soirée" class="size-48 rounded bg-creme p-2">
             <p class="text-12 text-ivoire-bas">
-                valable jusqu’à {{ $pin->valid_until->format('H\hi') }} · un nouveau code toutes les
-                {{ config('tembo.pin.rotation_minutes') }} min
+                valable jusqu’à {{ $accessToken->valid_until->format('H\hi') }} · un nouveau QR toutes les
+                {{ config('tembo.access.rotation_minutes') }} min
             </p>
         </div>
 

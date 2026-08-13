@@ -7,18 +7,20 @@ use App\Models\AuditLog;
 use App\Models\GuestSession;
 use App\Models\Photo;
 use App\Models\Vote;
-use App\Services\PinService;
+use App\Services\AccessTokenService;
 use App\Support\EventPhase;
 use Illuminate\View\View;
 
 /**
- * Vue d'ensemble de la soirée : les chiffres qui comptent, le PIN,
+ * Vue d'ensemble de la soirée : les chiffres qui comptent, le QR d'accès,
  * la phase, et les dernières actions de la régie.
  */
 class DashboardController extends Controller
 {
-    public function show(PinService $pinService): View
+    public function show(AccessTokenService $accessTokenService): View
     {
+        $accessToken = $accessTokenService->current();
+
         $countsByStatus = Photo::query()
             ->selectRaw('status, count(*) as total')
             ->groupBy('status')
@@ -31,7 +33,8 @@ class DashboardController extends Controller
             'votesCount' => Vote::query()->count(),
             'sessionsCount' => GuestSession::query()->count(),
             'phaseCourante' => EventPhase::current(),
-            'pin' => $pinService->current(),
+            'accessToken' => $accessToken,
+            'qr' => $accessTokenService->qrDataUri($accessToken),
             'dernieresActions' => AuditLog::query()->latest('id')->limit(6)->get(),
         ]);
     }

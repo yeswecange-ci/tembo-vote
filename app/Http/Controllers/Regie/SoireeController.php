@@ -6,7 +6,7 @@ use App\Enums\Phase;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Photo;
-use App\Services\PinService;
+use App\Services\AccessTokenService;
 use App\Support\EventPhase;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,15 +15,18 @@ use Illuminate\View\View;
 
 /**
  * Pilotage de la soirée : phase en un clic (le régisseur est pressé et dans
- * le noir) et PIN courant lisible même si le mur LED tombe.
+ * le noir) et QR d'accès affichable ici même si le mur LED tombe.
  */
 class SoireeController extends Controller
 {
-    public function show(PinService $pinService): View
+    public function show(AccessTokenService $accessTokenService): View
     {
+        $accessToken = $accessTokenService->current();
+
         return view('regie.soiree', [
             'phaseCourante' => EventPhase::current(),
-            'pin' => $pinService->current(),
+            'accessToken' => $accessToken,
+            'qr' => $accessTokenService->qrDataUri($accessToken),
             'pendingCount' => Photo::query()->pending()->count(),
             'publishedCount' => Photo::query()->approved()->count(),
         ]);

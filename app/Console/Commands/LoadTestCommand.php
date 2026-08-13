@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\Phase;
 use App\Models\Photo;
-use App\Services\PinService;
+use App\Services\AccessTokenService;
 use App\Support\EventPhase;
 use GuzzleHttp\Cookie\CookieJar;
 use Illuminate\Console\Attributes\Description;
@@ -41,15 +41,15 @@ class LoadTestCommand extends Command
             return self::FAILURE;
         }
 
-        $pin = app(PinService::class)->current()->code;
+        $token = app(AccessTokenService::class)->current()->token;
 
         // ----- 1. Ruée sur le QR : création des sessions -----
-        $this->line('1/4 · Connexions (saisie du PIN)…');
+        $this->line('1/4 · Connexions (scan du QR)…');
         $sessions = [];
         $barre = $this->output->createProgressBar($nbSessions);
 
         for ($i = 0; $i < $nbSessions; $i++) {
-            $session = $this->creerSession($pin);
+            $session = $this->creerSession($token);
             if ($session !== null) {
                 $sessions[] = $session;
             }
@@ -59,7 +59,7 @@ class LoadTestCommand extends Command
         $this->newLine();
 
         if (count($sessions) < max(1, (int) ($nbSessions * 0.9))) {
-            $this->error(count($sessions).' sessions créées seulement : vérifiez le rate limiting PIN ou le serveur.');
+            $this->error(count($sessions).' sessions créées seulement : jeton d’accès périmé en cours de test, ou serveur saturé.');
         }
 
         // ----- 2. Pic d'uploads simultanés -----
@@ -120,26 +120,23 @@ class LoadTestCommand extends Command
     }
 
     /**
-     * Parcours réel : GET /tembo (jeton CSRF) puis POST du PIN. Tous les
-     * cookies (session Laravel comprise) sont conservés : le jeton CSRF
-     * n'est valable qu'avec eux.
+     * Parcours réel : un seul GET /tembo?t=jeton, exactement comme un scan.
+     * La redirection est suivie jusqu'à la page d'atterrissage, d'où l'on
+     * relève le jeton CSRF. Tous les cookies (session Laravel comprise) sont
+     * conservés : le jeton CSRF n'est valable qu'avec eux.
      *
      * @return array{cookies: array<string, string>, token: string}|null
      */
-    private function creerSession(string $pin): ?array
+    private function creerSession(string $token): ?array
     {
         $jar = new CookieJar;
 
         $page = Http::withOptions(['cookies' => $jar] + $this->optionsMesure('connexion'))
-            ->get($this->baseUrl.'/tembo');
+            ->get($this->baseUrl.'/tembo', [AccessTokenService::QUERY_PARAM => $token]);
 
-        if (! preg_match('/name="_token" value="([^"]+)"/', $page->body(), $csrf)) {
+        if (! preg_match('/name="csrf-token" content="([^"]+)"/', $page->body(), $csrf)) {
             return null;
         }
-
-        Http::withOptions(['cookies' => $jar] + $this->optionsMesure('connexion'))
-            ->asForm()
-            ->post($this->baseUrl.'/tembo', ['_token' => $csrf[1], 'code' => $pin]);
 
         if ($jar->getCookieByName('tembo_session') === null) {
             return null;

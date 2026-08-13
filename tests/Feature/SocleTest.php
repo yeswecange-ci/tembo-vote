@@ -1,19 +1,19 @@
 <?php
 
-use App\Models\AccessPin;
+use App\Models\AccessToken;
 use App\Models\Setting;
 use App\Models\User;
 
-it('seed la base avec les 2 modérateurs, un PIN valide et la phase setup', function () {
+it('seed la base avec les 2 modérateurs, un jeton d’accès valide et la phase setup', function () {
     $this->seed();
 
     expect(User::query()->count())->toBe(2)
         ->and(User::query()->pluck('name')->sort()->values()->all())->toBe(['Christian', 'Hadassa'])
-        ->and(AccessPin::query()->currentlyValid()->count())->toBe(1)
+        ->and(AccessToken::query()->currentlyValid()->count())->toBe(1)
         ->and(Setting::getValue('phase'))->toBe('setup');
 
-    $pin = AccessPin::query()->currentlyValid()->first();
-    expect($pin->code)->toMatch('/^\d{4}$/');
+    $accessToken = AccessToken::query()->currentlyValid()->first();
+    expect($accessToken->token)->toHaveLength(32);
 });
 
 it('ne remet pas la phase à zéro quand on re-seed en pleine soirée', function () {
@@ -32,9 +32,9 @@ it('refuse de seeder les modérateurs sans mot de passe défini', function () {
 })->throws(RuntimeException::class);
 
 it('expose la configuration tembo attendue', function () {
-    expect(config('tembo.pin.rotation_minutes'))->toBe(20)
-        ->and(config('tembo.pin.valid_codes'))->toBe(2)
-        ->and(config('tembo.rate_limits.pin.attempts'))->toBe(5)
+    expect(config('tembo.access.rotation_minutes'))->toBe(5)
+        ->and(config('tembo.access.valid_tokens'))->toBe(2)
+        ->and(config('tembo.access.token_length'))->toBe(32)
         ->and(config('tembo.rate_limits.upload.attempts'))->toBe(3)
         ->and(config('tembo.rate_limits.vote.attempts'))->toBe(10)
         ->and(config('tembo.upload_max_kb'))->toBe(5120)

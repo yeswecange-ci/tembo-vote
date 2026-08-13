@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\GuestSession;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
  * @extends Factory<GuestSession>
@@ -18,7 +19,7 @@ class GuestSessionFactory extends Factory
         return [
             'device_hash' => hash('sha256', $this->faker->unique()->uuid()),
             'ip_hash' => hash('sha256', $this->faker->ipv4()),
-            'pin_used' => str_pad((string) $this->faker->numberBetween(0, 9999), 4, '0', STR_PAD_LEFT),
+            'token_used' => Str::random((int) config('tembo.access.token_length')),
             'expires_at' => now()->addHours(8),
         ];
     }

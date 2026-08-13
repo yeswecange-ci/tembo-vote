@@ -8,8 +8,8 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Protège toutes les routes invité : sans session active, retour à la
- * saisie du code avec un message qui dit quoi faire.
+ * Protège toutes les routes invité : sans session active, retour à l'entrée
+ * avec un message qui dit quoi faire — rescanner le QR de l'écran.
  */
 class EnsureGuestSession
 {
@@ -26,15 +26,15 @@ class EnsureGuestSession
             // Le polling attend du JSON : un 401 explicite plutôt qu'une
             // redirection HTML que le client ne saurait pas interpréter
             if ($request->expectsJson()) {
-                abort(401, 'Session expirée. Rechargez la page et saisissez le code affiché sur l’écran.');
+                abort(401, 'Session expirée. Scannez à nouveau le QR code affiché sur l’écran de la salle.');
             }
 
             return redirect()
-                ->route('tembo.pin')
+                ->route('tembo.entree')
                 ->withoutCookie(self::COOKIE)
                 ->with('message', $guestSession === null
-                    ? 'Saisissez le code affiché sur l’écran de la salle pour accéder à la soirée.'
-                    : 'Votre session a expiré. Saisissez le code affiché sur l’écran pour revenir.');
+                    ? 'Scannez le QR code affiché sur l’écran de la salle pour accéder à la soirée.'
+                    : 'Votre session a expiré. Scannez à nouveau le QR code affiché sur l’écran pour revenir.');
         }
 
         $request->attributes->set('guestSession', $guestSession);

@@ -1,129 +1,134 @@
 <?php
 
+use App\Enums\Phase;
 use App\Http\Middleware\EnsureGuestSession;
-use App\Models\AccessPin;
+use App\Models\AccessToken;
 use App\Models\AuditLog;
 use App\Models\GuestSession;
-use App\Services\PinService;
-use Illuminate\Support\Facades\Storage;
+use App\Services\AccessTokenService;
+use App\Support\EventPhase;
 
-it('affiche l’écran de saisie du code', function () {
-    $this->get('/tembo')
-        ->assertOk()
-        ->assertSee('Code d’accès', false)
-        ->assertSee('one-time-code', false);
-});
+/** URL exacte portée par le QR de l'écran. */
+function urlScan(string $token): string
+{
+    return '/tembo?'.AccessTokenService::QUERY_PARAM.'='.$token;
+}
 
-it('crée une session et pose le cookie avec un code valide', function () {
-    AccessPin::factory()->create(['code' => '1234']);
+it('fait entrer directement en scannant le QR, sans rien saisir', function () {
+    AccessToken::factory()->create(['token' => 'jeton-valide']);
 
-    $response = $this->post('/tembo', ['code' => '1234']);
-
-    $response->assertRedirect(route('tembo.accueil'))
+    $this->get(urlScan('jeton-valide'))
+        ->assertRedirect(route('tembo.accueil'))
         ->assertCookie(EnsureGuestSession::COOKIE);
 
     $guestSession = GuestSession::query()->sole();
-    expect($guestSession->pin_used)->toBe('1234')
+    expect($guestSession->token_used)->toBe('jeton-valide')
         ->and($guestSession->expires_at->isFuture())->toBeTrue()
         // Empreintes hachées : jamais d'IP en clair en base
         ->and($guestSession->device_hash)->toMatch('/^[0-9a-f]{64}$/')
         ->and($guestSession->ip_hash)->toMatch('/^[0-9a-f]{64}$/');
 });
 
-it('fait entrer directement via le QR de l’écran (?code=), sans saisie', function () {
-    AccessPin::factory()->create(['code' => '1234']);
+it('mène droit à la publication pendant la phase de publication', function () {
+    EventPhase::set(Phase::Open);
+    AccessToken::factory()->create(['token' => 'jeton-valide']);
 
-    $this->get('/tembo?code=1234')
-        ->assertRedirect(route('tembo.accueil'))
-        ->assertCookie(EnsureGuestSession::COOKIE);
-
-    expect(GuestSession::query()->count())->toBe(1)
-        ->and(GuestSession::query()->sole()->pin_used)->toBe('1234');
+    $this->get(urlScan('jeton-valide'))->assertRedirect(route('photos.create'));
 });
 
-it('renvoie à la saisie manuelle quand le QR scanné a expiré', function () {
-    AccessPin::factory()->create(['code' => '1234']);
+it('mène droit à la galerie pendant la phase de vote seul', function () {
+    EventPhase::set(Phase::VoteOnly);
+    AccessToken::factory()->create(['token' => 'jeton-valide']);
 
-    $this->get('/tembo?code=9999')
-        ->assertRedirect(route('tembo.pin'))
-        ->assertSessionHas('message');
+    $this->get(urlScan('jeton-valide'))->assertRedirect(route('galerie.index'));
+});
+
+it('explique quoi faire quand on arrive sans jeton, sans proposer de saisie', function () {
+    $this->get('/tembo')
+        ->assertForbidden()
+        ->assertSee('scannant le QR code', false)
+        // Plus aucun champ de code : le QR est le seul chemin
+        ->assertDontSee('one-time-code', false);
 
     expect(GuestSession::query()->count())->toBe(0);
 });
 
-it('accepte les deux codes valides en glissement', function () {
-    // Ancien code : rotation passée mais fenêtre de 40 min pas encore close
-    AccessPin::factory()->create([
-        'code' => '1111',
-        'valid_from' => now()->subMinutes(25),
-        'valid_until' => now()->addMinutes(15),
-    ]);
-    AccessPin::factory()->create(['code' => '2222']);
+it('refuse un QR périmé et invite à rescanner l’écran', function () {
+    AccessToken::factory()->create(['token' => 'jeton-valide']);
 
-    $this->post('/tembo', ['code' => '1111'])->assertRedirect(route('tembo.accueil'));
-    $this->post('/tembo', ['code' => '2222'])->assertRedirect(route('tembo.accueil'));
+    $this->get(urlScan('jeton-perime'))
+        ->assertForbidden()
+        ->assertSee('n’est plus valide', false);
+
+    expect(GuestSession::query()->count())->toBe(0);
+});
+
+it('refuse un jeton dont la fenêtre est close', function () {
+    AccessToken::factory()->expired()->create(['token' => 'jeton-clos']);
+
+    $this->get(urlScan('jeton-clos'))->assertForbidden();
+
+    expect(GuestSession::query()->count())->toBe(0);
+});
+
+it('accepte les deux jetons valides en glissement', function () {
+    // Ancien jeton : rotation passée, fenêtre de 10 min pas encore close
+    AccessToken::factory()->create([
+        'token' => 'jeton-ancien',
+        'valid_from' => now()->subMinutes(6),
+        'valid_until' => now()->addMinutes(4),
+    ]);
+    AccessToken::factory()->create(['token' => 'jeton-courant']);
+
+    $this->get(urlScan('jeton-ancien'))->assertRedirect(route('tembo.accueil'));
+    $this->get(urlScan('jeton-courant'))->assertRedirect(route('tembo.accueil'));
 
     expect(GuestSession::query()->count())->toBe(2);
 });
 
-it('rejette un code invalide avec un message explicite, sans créer de session', function () {
-    AccessPin::factory()->create(['code' => '1234']);
+it('ne redemande rien à qui a déjà une session active', function () {
+    $guestSession = GuestSession::factory()->create();
 
-    $this->from('/tembo')->post('/tembo', ['code' => '9999'])
-        ->assertRedirect('/tembo')
-        ->assertSessionHasErrors('code');
+    $this->withCookie(EnsureGuestSession::COOKIE, $guestSession->id)
+        ->get('/tembo')
+        ->assertRedirect(route('tembo.accueil'));
 
-    expect(GuestSession::query()->count())->toBe(0);
+    // Aucune session supplémentaire : le scan n'a pas été rejoué
+    expect(GuestSession::query()->count())->toBe(1);
 });
 
-it('bloque après 5 tentatives ratées et annonce le délai, même avec le bon code', function () {
-    AccessPin::factory()->create(['code' => '1234']);
+it('génère un nouveau jeton à la volée quand la rotation est due, sans invalider l’ancien', function () {
+    $ancien = AccessToken::factory()->create(['token' => 'jeton-ancien']);
 
-    foreach (range(1, 5) as $tentative) {
-        $this->post('/tembo', ['code' => '0000']);
-    }
+    $this->travel(6)->minutes();
 
-    $response = $this->from('/tembo')->post('/tembo', ['code' => '1234']);
-
-    $response->assertSessionHasErrors('code');
-    expect(session('errors')->first('code'))->toContain('Trop de tentatives')
-        ->and(GuestSession::query()->count())->toBe(0);
-});
-
-it('génère un nouveau code à la volée quand la rotation est due, sans invalider l’ancien', function () {
-    $ancien = AccessPin::factory()->create(['code' => '1111']);
-
-    $this->travel(21)->minutes();
-
-    $courant = app(PinService::class)->current();
+    $courant = app(AccessTokenService::class)->current();
 
     expect($courant->isNot($ancien))->toBeTrue()
         ->and($courant->valid_from->isPast())->toBeTrue()
-        // L'ancien code reste utilisable jusqu'à la fin de sa fenêtre de 40 min
-        ->and(AccessPin::query()->currentlyValid()->where('code', '1111')->exists())->toBeTrue();
+        // L'ancien reste utilisable jusqu'à la fin de sa fenêtre de 10 min
+        ->and(AccessToken::query()->currentlyValid()->where('token', 'jeton-ancien')->exists())->toBeTrue();
 });
 
-it('ne crée pas de doublon tant que le code courant est frais', function () {
-    $pin = AccessPin::factory()->create(['code' => '1111']);
+it('ne crée pas de doublon tant que le jeton courant est frais', function () {
+    $accessToken = AccessToken::factory()->create();
 
-    $service = app(PinService::class);
+    $service = app(AccessTokenService::class);
 
-    expect($service->current()->is($pin))->toBeTrue()
-        ->and(AccessPin::query()->count())->toBe(1);
+    expect($service->current()->is($accessToken))->toBeTrue()
+        ->and(AccessToken::query()->count())->toBe(1);
 });
 
-it('la commande tembo:rotate-pin crée un code et le journalise', function () {
-    $this->artisan('tembo:rotate-pin')->assertSuccessful();
+it('produit un jeton long et opaque, hors de portée d’une devinette', function () {
+    $accessToken = app(AccessTokenService::class)->rotate();
 
-    expect(AccessPin::query()->count())->toBe(1)
-        ->and(AuditLog::query()->where('action', 'pin.rotated')->count())->toBe(1);
+    expect($accessToken->token)->toHaveLength(32)
+        ->and($accessToken->token)->toMatch('/^[A-Za-z0-9]{32}$/');
 });
 
-it('la commande tembo:qr produit le PNG et le SVG', function () {
-    Storage::fake('local');
+it('la commande tembo:rotate-token crée un jeton et le journalise', function () {
+    $this->artisan('tembo:rotate-token')->assertSuccessful();
 
-    $this->artisan('tembo:qr')->assertSuccessful();
-
-    Storage::assertExists('qr/qr-tembo.png');
-    Storage::assertExists('qr/qr-tembo.svg');
+    expect(AccessToken::query()->count())->toBe(1)
+        ->and(AuditLog::query()->where('action', 'token.rotated')->count())->toBe(1);
 });
