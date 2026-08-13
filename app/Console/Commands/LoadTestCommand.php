@@ -76,7 +76,6 @@ class LoadTestCommand extends Command
                     ->post($this->baseUrl.'/tembo/photo', [
                         '_token' => $session['token'],
                         'display_name' => 'Charge '.($indice * 100 + $i),
-                        'consent_event' => '1',
                     ])
             )->all());
         }

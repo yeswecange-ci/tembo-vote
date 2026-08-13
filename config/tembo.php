@@ -118,8 +118,9 @@ return [
     | Seules les chaînes ci-dessous sont à modifier, rien d'autre à toucher.
     */
     'legal' => [
-        // Case OBLIGATOIRE : affichage pendant la soirée
-        'consent_event' => "J'accepte que ma photo et mon prénom soient affichés dans la galerie et sur l'écran de la soirée Club Tembo du 14 août 2026. [PLACEHOLDER — texte définitif à fournir par Bracongo]",
+        // Mention OBLIGATOIRE affichée juste au-dessus du bouton d'envoi :
+        // le consentement est donné par l'acte d'envoyer, sans case à cocher
+        'consent_event' => "En envoyant votre photo, vous acceptez qu'elle soit affichée avec votre prénom dans la galerie et sur l'écran de la soirée Club Tembo du 14 août 2026. [PLACEHOLDER — texte définitif à fournir par Bracongo]",
 
         // Mention discrète mais présente en pied de page de tous les écrans
         'responsible_drinking' => "L'abus d'alcool est dangereux pour la santé. À consommer avec modération.",

@@ -20,7 +20,6 @@ function envoyerPhoto($test, array $surcharges = [])
     $donnees = array_merge([
         'photo' => UploadedFile::fake()->image('selfie.jpg', 2400, 1800),
         'display_name' => 'Aïcha',
-        'consent_event' => '1',
     ], $surcharges);
 
     // post() multipart (et non postJson) : les fichiers ne survivent pas à un encodage JSON
@@ -37,7 +36,9 @@ it('affiche l’écran de capture en phase open', function () {
         ->assertOk()
         ->assertSee('Prendre un selfie')
         ->assertSee('Choisir dans la galerie')
+        // Mention légale lue avant l'envoi, sans case à cocher
         ->assertSee(config('tembo.legal.consent_event'))
+        ->assertDontSee('type="checkbox"', false)
         // La réutilisation après l'événement n'est plus mentionnée
         ->assertDontSee('réutilise');
 });
@@ -116,17 +117,16 @@ it('refuse un fichier au-delà de la taille maximale', function () {
         ->assertJsonValidationErrors('photo');
 });
 
-it('exige le consentement d’affichage, et lui seul', function () {
+it('enregistre le consentement d’affichage sans rien demander de plus', function () {
     EventPhase::set(Phase::Open);
 
-    // Sans la case obligatoire → refus
-    envoyerPhoto($this, ['consent_event' => null])
-        ->assertStatus(422)
-        ->assertJsonValidationErrors('consent_event');
+    // Plus aucune case à cocher : l'envoi vaut consentement d'affichage
+    envoyerPhoto($this)->assertOk();
 
-    // Le consentement de réutilisation n'est plus collecté : même envoyé, il est ignoré
-    envoyerPhoto($this, ['consent_reuse' => '1'])->assertOk();
-    expect(Photo::query()->sole()->consent_reuse)->toBeFalse();
+    $photo = Photo::query()->sole();
+    expect($photo->consent_event)->toBeTrue()
+        // Le consentement de réutilisation n'est plus collecté
+        ->and($photo->consent_reuse)->toBeFalse();
 });
 
 it('valide la longueur du prénom (2 à 24 caractères)', function (string $nom) {
@@ -184,7 +184,7 @@ it('limite les envois à 3 par minute et par session', function () {
     EventPhase::set(Phase::Open);
 
     foreach (range(1, 3) as $tentative) {
-        envoyerPhoto($this, ['consent_event' => null]); // tentatives comptées même invalides
+        envoyerPhoto($this, ['display_name' => '']); // tentatives comptées même invalides
     }
 
     envoyerPhoto($this)->assertStatus(429);

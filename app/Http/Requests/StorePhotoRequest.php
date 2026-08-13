@@ -34,7 +34,6 @@ class StorePhotoRequest extends FormRequest
             // repli sans canvas, refusé avec une consigne claire.
             'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:'.(int) config('tembo.upload_max_kb')],
             'display_name' => ['required', 'string', 'min:2', 'max:24'],
-            'consent_event' => ['accepted'],
         ];
     }
 
@@ -52,7 +51,6 @@ class StorePhotoRequest extends FormRequest
             'display_name.required' => 'Indiquez le prénom ou le pseudo à afficher sous votre photo.',
             'display_name.min' => 'Le prénom doit faire entre 2 et 24 caractères.',
             'display_name.max' => 'Le prénom doit faire entre 2 et 24 caractères.',
-            'consent_event.accepted' => 'Cochez la case de consentement pour que votre photo soit affichée pendant la soirée.',
         ];
     }
 }

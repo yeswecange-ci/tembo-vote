@@ -104,12 +104,10 @@
                 <p class="mt-2 text-12 text-ivoire-bas" x-show="!premiereErreur('display_name')">2 à 24 caractères, affiché sous votre photo.</p>
             </div>
 
+            {{-- Le consentement est donné par l'envoi : la mention reste lue
+                 avant le geste, sans case à cocher qui freine le parcours. --}}
             <div class="rounded border border-nuit-bord bg-nuit-haut p-4">
-                <label class="flex min-h-11 cursor-pointer items-start gap-3">
-                    <input type="checkbox" x-model="consentEvenement" class="mt-1 size-5 shrink-0 accent-rouge">
-                    <span class="text-14 text-ivoire">{{ config('tembo.legal.consent_event') }}</span>
-                </label>
-                <p class="mt-2 text-14 text-rouge" x-show="premiereErreur('consent_event')" x-cloak x-text="premiereErreur('consent_event')"></p>
+                <p class="text-14 text-ivoire">{{ config('tembo.legal.consent_event') }}</p>
             </div>
 
             <p class="text-12 text-ivoire-bas">{{ config('tembo.legal.privacy_notice') }}</p>
@@ -126,13 +124,9 @@
                     </div>
                 </div>
 
-                {{-- Grisé tant que le consentement obligatoire n'est pas donné. --}}
-                <x-bouton class="min-h-14 w-full" x-on:click="envoyer()" x-bind:disabled="envoiEnCours || !consentEvenement">
+                <x-bouton class="min-h-14 w-full" x-on:click="envoyer()" x-bind:disabled="envoiEnCours">
                     Envoyer ma photo
                 </x-bouton>
-                <p class="text-center text-12 text-ivoire-bas" x-show="!consentEvenement">
-                    Cochez la case de consentement ci-dessus pour pouvoir envoyer votre photo.
-                </p>
             </div>
         </div>
     </div>

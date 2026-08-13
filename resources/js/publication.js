@@ -9,13 +9,12 @@
  */
 export default function publicationPhoto() {
     return {
-        // capture (choix + aperçu) → details (nom + consentements) ; la
-        // confirmation est une page serveur après redirection.
+        // capture (choix + aperçu) → details (nom) ; la confirmation est
+        // une page serveur après redirection.
         etape: 'capture',
         blob: null,
         apercu: null,
         nom: '',
-        consentEvenement: false,
         envoiEnCours: false,
         progression: 0,
         erreurs: {},
@@ -97,9 +96,6 @@ export default function publicationPhoto() {
             donnees.append('_token', document.querySelector('meta[name="csrf-token"]').content);
             donnees.append('photo', this.blob, 'photo.jpg');
             donnees.append('display_name', this.nom);
-            if (this.consentEvenement) {
-                donnees.append('consent_event', '1');
-            }
 
             const xhr = new XMLHttpRequest();
             xhr.open('POST', this.$root.dataset.url);

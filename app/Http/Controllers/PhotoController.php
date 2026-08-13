@@ -69,6 +69,8 @@ class PhotoController extends Controller
 
         $photo = $photoService->publish($guestSession, $request->file('photo'), [
             'display_name' => $request->validated('display_name'),
+            // Consentement d'affichage donné par l'envoi lui-même : la mention
+            // légale est lue au-dessus du bouton, il n'y a plus de case à cocher
             'consent_event' => true,
             // Le consentement de réutilisation n'est plus demandé à l'invité :
             // la colonne reste en base (purge, export) et vaut toujours false.
