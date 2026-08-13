@@ -70,7 +70,9 @@ class PhotoController extends Controller
         $photo = $photoService->publish($guestSession, $request->file('photo'), [
             'display_name' => $request->validated('display_name'),
             'consent_event' => true,
-            'consent_reuse' => $request->boolean('consent_reuse'),
+            // Le consentement de réutilisation n'est plus demandé à l'invité :
+            // la colonne reste en base (purge, export) et vaut toujours false.
+            'consent_reuse' => false,
         ]);
 
         session()->flash('photo_envoyee', true);

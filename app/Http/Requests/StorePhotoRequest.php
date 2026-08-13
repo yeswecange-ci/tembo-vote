@@ -35,7 +35,6 @@ class StorePhotoRequest extends FormRequest
             'photo' => ['required', 'file', 'image', 'mimes:jpeg,jpg,png', 'max:'.(int) config('tembo.upload_max_kb')],
             'display_name' => ['required', 'string', 'min:2', 'max:24'],
             'consent_event' => ['accepted'],
-            'consent_reuse' => ['sometimes', 'boolean'],
         ];
     }
 

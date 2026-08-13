@@ -38,7 +38,8 @@ it('affiche l’écran de capture en phase open', function () {
         ->assertSee('Prendre un selfie')
         ->assertSee('Choisir dans la galerie')
         ->assertSee(config('tembo.legal.consent_event'))
-        ->assertSee(config('tembo.legal.consent_reuse'));
+        // La réutilisation après l'événement n'est plus mentionnée
+        ->assertDontSee('réutilise');
 });
 
 it('explique la fermeture de la publication hors phase open', function (Phase $phase, string $texte) {
@@ -123,9 +124,9 @@ it('exige le consentement d’affichage, et lui seul', function () {
         ->assertStatus(422)
         ->assertJsonValidationErrors('consent_event');
 
-    // La case facultative cochée est enregistrée
+    // Le consentement de réutilisation n'est plus collecté : même envoyé, il est ignoré
     envoyerPhoto($this, ['consent_reuse' => '1'])->assertOk();
-    expect(Photo::query()->sole()->consent_reuse)->toBeTrue();
+    expect(Photo::query()->sole()->consent_reuse)->toBeFalse();
 });
 
 it('valide la longueur du prénom (2 à 24 caractères)', function (string $nom) {

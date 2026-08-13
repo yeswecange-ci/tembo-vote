@@ -16,7 +16,6 @@ export default function publicationPhoto() {
         apercu: null,
         nom: '',
         consentEvenement: false,
-        consentReutilisation: false,
         envoiEnCours: false,
         progression: 0,
         erreurs: {},
@@ -100,9 +99,6 @@ export default function publicationPhoto() {
             donnees.append('display_name', this.nom);
             if (this.consentEvenement) {
                 donnees.append('consent_event', '1');
-            }
-            if (this.consentReutilisation) {
-                donnees.append('consent_reuse', '1');
             }
 
             const xhr = new XMLHttpRequest();

@@ -39,7 +39,6 @@ it('expose la configuration tembo attendue', function () {
         ->and(config('tembo.rate_limits.vote.attempts'))->toBe(10)
         ->and(config('tembo.upload_max_kb'))->toBe(5120)
         ->and(config('tembo.legal.consent_event'))->toBeString()->not->toBeEmpty()
-        ->and(config('tembo.legal.consent_reuse'))->toBeString()->not->toBeEmpty()
         ->and(config('tembo.legal.responsible_drinking'))->toBeString()->not->toBeEmpty()
         ->and(config('tembo.screen_key'))->not->toBeEmpty();
 });

@@ -110,15 +110,6 @@
                     <span class="text-14 text-ivoire">{{ config('tembo.legal.consent_event') }}</span>
                 </label>
                 <p class="mt-2 text-14 text-rouge" x-show="premiereErreur('consent_event')" x-cloak x-text="premiereErreur('consent_event')"></p>
-
-                {{-- Décochée par défaut : exigence légale, pas un choix de design --}}
-                <label class="mt-4 flex min-h-11 cursor-pointer items-start gap-3 border-t border-nuit-bord pt-4">
-                    <input type="checkbox" x-model="consentReutilisation" class="mt-1 size-5 shrink-0 accent-rouge">
-                    <span class="text-14 text-ivoire-bas">
-                        {{ config('tembo.legal.consent_reuse') }}
-                        <span class="text-12">(facultatif)</span>
-                    </span>
-                </label>
             </div>
 
             <p class="text-12 text-ivoire-bas">{{ config('tembo.legal.privacy_notice') }}</p>
@@ -135,10 +126,7 @@
                     </div>
                 </div>
 
-                {{-- Grisé tant que le consentement obligatoire n'est pas donné.
-                     La case de réutilisation reste hors condition : elle est
-                     facultative par exigence légale, le bouton ne doit pas
-                     forcer la main. --}}
+                {{-- Grisé tant que le consentement obligatoire n'est pas donné. --}}
                 <x-bouton class="min-h-14 w-full" x-on:click="envoyer()" x-bind:disabled="envoiEnCours || !consentEvenement">
                     Envoyer ma photo
                 </x-bouton>

@@ -114,9 +114,6 @@ return [
         // Case OBLIGATOIRE : affichage pendant la soirée
         'consent_event' => "J'accepte que ma photo et mon prénom soient affichés dans la galerie et sur l'écran de la soirée Club Tembo du 14 août 2026. [PLACEHOLDER — texte définitif à fournir par Bracongo]",
 
-        // Case FACULTATIVE, décochée par défaut (exigence légale) : réutilisation après l'événement
-        'consent_reuse' => "J'accepte que Bracongo réutilise ma photo dans sa communication après l'événement. [PLACEHOLDER — texte définitif à fournir par Bracongo]",
-
         // Mention discrète mais présente en pied de page de tous les écrans
         'responsible_drinking' => "L'abus d'alcool est dangereux pour la santé. À consommer avec modération.",
 
