@@ -7,24 +7,16 @@
 FROM composer:2 AS deps
 WORKDIR /app
 COPY composer.json composer.lock ./
-# Jeton GitHub optionnel, injecté en build arg : sans authentification, codeload
-# limite le débit par IP et renvoie des 429 en rafale. Déclaré en ARG et non en
-# ENV — l'étape deps est jetée, seul /app/vendor est repris, donc le jeton
-# n'atteint jamais l'image finale.
+# Jeton GitHub optionnel, injecté en build arg : non authentifié, codeload refuse
+# les archives de ce serveur en 429. Déclaré en ARG et non en ENV — l'étape deps
+# est jetée, seul /app/vendor est repris, donc le jeton n'atteint pas l'image
+# finale.
 ARG COMPOSER_AUTH
-# Les 12 téléchargements concurrents par défaut, sur 81 paquets, suffisent à
-# déclencher le 429 ; et --prefer-dist ne se replie pas sur les sources git,
-# si bien qu'un seul refus est fatal au build.
-ENV COMPOSER_MAX_PARALLEL_HTTP=4
-# Trois tentatives espacées : un 429 est transitoire, et le cache Composer garde
-# les paquets déjà obtenus — chaque reprise a donc moins à retélécharger.
+# Sans --prefer-dist, Composer garde le repli sur les sources git : il préfère
+# toujours les archives, mais un refus de codeload le fait cloner depuis
+# github.com au lieu d'abandonner le build.
 # --ignore-platform-reqs : les extensions (gd, zip…) vivent dans l'image finale
-RUN for tentative in 1 2 3; do \
-        composer install --no-dev --no-scripts --no-autoloader --prefer-dist --ignore-platform-reqs && exit 0; \
-        echo ">>> Tentative $tentative échouée (limite de débit GitHub ?), reprise dans 20 s."; \
-        sleep 20; \
-    done; \
-    exit 1
+RUN composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs
 
 # ---------- 2. Assets front (Vite + Tailwind 4) ----------
 FROM node:22-alpine AS assets
