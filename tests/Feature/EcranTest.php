@@ -21,7 +21,7 @@ it('affiche l’écran d’attente avec le QR d’accès en phase setup', functi
     $this->get(route('ecran', ['cle' => $this->cle]))
         ->assertOk()
         ->assertSee('data:image/svg+xml;base64,', false)
-        ->assertSee('Soirée Club Tembo')
+        ->assertSee('Soirée Castel Beer Afterwork')
         ->assertSee(config('tembo.legal.responsible_drinking'));
 });
 

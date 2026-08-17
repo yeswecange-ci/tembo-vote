@@ -9,7 +9,7 @@
             @if ($phase === Phase::Setup)
                 Revenez au lancement de la soirée pour publier votre selfie avec votre Tembo.
             @else
-                Merci d’avoir participé à la soirée Club Tembo.
+                Merci d’avoir participé à la soirée Castel Beer Afterwork.
             @endif
             <x-slot:action>
                 <x-bouton variante="secondaire" :href="route('tembo.accueil')">Retour à l’accueil</x-bouton>

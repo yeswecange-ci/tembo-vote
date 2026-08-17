@@ -8,7 +8,7 @@
         <div class="flex flex-col items-center gap-6 text-center">
             <x-pastille-logo />
             <div>
-                <h1 class="titre text-26 text-ivoire">Soirée Club Tembo</h1>
+                <h1 class="titre text-26 text-ivoire">Soirée Castel Beer Afterwork</h1>
                 <p class="mt-2 text-14 text-ivoire-bas">{{ $message }}</p>
             </div>
         </div>

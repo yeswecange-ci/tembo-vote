@@ -23,7 +23,7 @@
         <header class="flex flex-col items-center gap-5 pt-4 text-center">
             <x-pastille-logo />
             <div>
-                <h1 class="titre text-26 text-ivoire">Soirée Club Tembo</h1>
+                <h1 class="titre text-26 text-ivoire">Soirée Castel Beer Afterwork</h1>
                 <p class="mt-2 font-mono text-14 text-or-clair">14 août 2026 · Kinshasa</p>
             </div>
             <p class="max-w-xs text-14 text-ivoire-bas">

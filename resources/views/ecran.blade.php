@@ -4,7 +4,7 @@
     La phase initiale est rendue côté serveur : même si le JavaScript mourait,
     l'écran afficherait un état figé cohérent, jamais une page blanche.
 --}}
-<x-layouts.screen title="Écran — Soirée Club Tembo">
+<x-layouts.screen title="Écran — Soirée Castel Beer Afterwork">
     <div
         x-data="ecran"
         data-url-api="{{ route('api.ecran', ['cle' => $cle]) }}"
@@ -43,10 +43,10 @@
             class="flex flex-1 flex-col items-center justify-center gap-[4vh] px-[8vw] text-center"
         >
             <div class="flex size-[16vh] items-center justify-center rounded-full border border-nuit-bord bg-creme">
-                <img src="{{ asset('images/logo-tembo.png') }}" alt="Tembo" class="w-[10vh]">
+                <img src="{{ asset('images/logo-castel.png') }}" alt="Castel Beer" class="w-[11.5vh]">
             </div>
             <div>
-                <h1 class="titre text-[clamp(2rem,7vh,6.5rem)] text-ivoire">Soirée Club Tembo</h1>
+                <h1 class="titre text-[clamp(2rem,7vh,6.5rem)] text-ivoire">Soirée Castel Beer Afterwork</h1>
                 <x-ruban class="mx-auto mt-[2vh] w-[32vw]" />
             </div>
             <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">
@@ -144,13 +144,13 @@
             class="flex flex-1 flex-col items-center justify-center gap-[4vh] text-center"
         >
             <div class="flex size-[16vh] items-center justify-center rounded-full border border-nuit-bord bg-creme">
-                <img src="{{ asset('images/logo-tembo.png') }}" alt="Tembo" class="w-[10vh]">
+                <img src="{{ asset('images/logo-castel.png') }}" alt="Castel Beer" class="w-[11.5vh]">
             </div>
             <div>
                 <p class="titre text-[clamp(2.5rem,9vh,8rem)] text-ivoire">Merci</p>
                 <x-ruban class="mx-auto mt-[2vh] w-[24vw]" />
             </div>
-            <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">Soirée Club Tembo · 14 août 2026</p>
+            <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">Soirée Castel Beer Afterwork · 14 août 2026</p>
         </section>
 
         {{-- Bandeau du bas : stats + consommation responsable, sur tous les écrans --}}

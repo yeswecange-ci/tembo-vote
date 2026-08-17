@@ -4,7 +4,7 @@
     rafraîchit seul (rotation toutes les 5 minutes), et la page réutilise
     le composant écran : mêmes réflexes de résilience.
 --}}
-<x-layouts.screen title="Accès — Soirée Club Tembo">
+<x-layouts.screen title="Accès — Soirée Castel Beer Afterwork">
     <div
         x-data="ecran"
         data-url-api="{{ route('api.ecran', ['cle' => $cle]) }}"
@@ -18,11 +18,11 @@
 
         <section class="flex flex-1 flex-col items-center justify-center gap-[3.5vh] px-[8vw] text-center">
             <div class="flex size-[13vh] items-center justify-center rounded-full border border-nuit-bord bg-creme">
-                <img src="{{ asset('images/logo-tembo.png') }}" alt="Tembo" class="w-[8vh]">
+                <img src="{{ asset('images/logo-castel.png') }}" alt="Castel Beer" class="w-[9.25vh]">
             </div>
 
             <div>
-                <h1 class="titre text-[clamp(1.75rem,6vh,5.5rem)] text-ivoire">Soirée Club Tembo</h1>
+                <h1 class="titre text-[clamp(1.75rem,6vh,5.5rem)] text-ivoire">Soirée Castel Beer Afterwork</h1>
                 <x-ruban class="mx-auto mt-[2vh] w-[32vw]" />
             </div>
 
