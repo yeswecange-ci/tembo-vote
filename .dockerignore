@@ -14,6 +14,30 @@
 /.claude
 /.cursor
 /.phpunit.cache
-presentation-equipe-tembo.pptx
+*.pptx
 prompt-claude-code-tembo-selfie-vote.md
 ~$*
+
+# Données locales : une image construite depuis ce poste de travail
+# embarquerait sinon les photos et sauvegardes de répétition, les logs et les
+# vues compilées. Coolify construit depuis le dépôt, où rien de tout cela
+# n'est suivi — c'est une ceinture de sécurité pour les constructions locales.
+storage/app/private/**
+storage/app/public/**
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+storage/logs/*
+
+# Les .gitignore de Laravel gardent ces dossiers présents dans l'image : le
+# compilateur de vues et le pilote de session exigent un chemin existant, ils
+# ne le créent pas eux-mêmes. Exceptions énumérées et non `!**/.gitignore` :
+# ce motif générique forcerait Docker à parcourir tout node_modules.
+!storage/app/private/.gitignore
+!storage/app/public/.gitignore
+!storage/framework/cache/data/.gitignore
+!storage/framework/sessions/.gitignore
+!storage/framework/views/.gitignore
+!storage/framework/testing/.gitignore
+!storage/logs/.gitignore
