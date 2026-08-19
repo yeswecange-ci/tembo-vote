@@ -5,6 +5,7 @@ use App\Enums\PhotoStatus;
 use App\Models\AccessToken;
 use App\Models\AuditLog;
 use App\Models\Photo;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\EventPhase;
 use Illuminate\Support\ViewErrorBag;
@@ -225,6 +226,25 @@ it('change la phase en un clic, avec effet immédiat et journalisation', functio
 
     expect(EventPhase::current())->toBe(Phase::Open)
         ->and(AuditLog::query()->where('action', 'phase.changed')->exists())->toBeTrue();
+});
+
+it('refuse de basculer en révélation sans classement validé', function () {
+    EventPhase::set(Phase::Frozen);
+
+    // Le bouton « Révélation » de la page Soirée ne doit pas contourner la
+    // relecture humaine du Top 5, seul garde-fou anti-triche du dispositif.
+    $this->actingAs($this->moderator)->post(route('regie.soiree.phase'), ['phase' => 'reveal'])
+        ->assertRedirect(route('regie.revelation'))
+        ->assertSessionHas('erreur');
+
+    expect(EventPhase::current())->toBe(Phase::Frozen);
+
+    Setting::setValue('winner_photo_id', Photo::factory()->approved()->create()->id);
+
+    $this->actingAs($this->moderator)->post(route('regie.soiree.phase'), ['phase' => 'reveal'])
+        ->assertRedirect(route('regie.soiree'));
+
+    expect(EventPhase::current())->toBe(Phase::Reveal);
 });
 
 it('refuse une phase inconnue', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\PhotoStatus;
 use App\Models\Photo;
 use Illuminate\Support\Facades\Cache;
 
@@ -17,6 +18,8 @@ class GalleryCache
 
     private const LIST_KEY = 'tembo.gallery.photos';
 
+    private const REMOVED_KEY = 'tembo.gallery.removed';
+
     /** Le TTL reste court devant la durée de vie des URL signées (6 h). */
     private const LIST_TTL_SECONDS = 300;
 
@@ -29,6 +32,27 @@ class GalleryCache
     {
         Cache::forever(self::VERSION_KEY, self::version() + 1);
         Cache::forget(self::LIST_KEY);
+        Cache::forget(self::REMOVED_KEY);
+    }
+
+    /**
+     * Photos sorties de la galerie après publication. Le polling n'ajoute que
+     * des photos : sans cette liste, une photo retirée resterait affichée sur
+     * les téléphones déjà ouverts jusqu'à leur prochain rechargement.
+     *
+     * Le motif de retrait n'appartient pas à ceux proposés aux modérateurs : il
+     * distingue sans ambiguïté un retrait d'un refus en modération, qui lui
+     * n'est jamais entré dans la galerie.
+     *
+     * @return array<int, string>
+     */
+    public static function removed(): array
+    {
+        return Cache::remember(self::REMOVED_KEY, self::LIST_TTL_SECONDS, fn (): array => Photo::query()
+            ->where('status', PhotoStatus::Rejected)
+            ->where('reject_reason', config('tembo.removal_reason'))
+            ->pluck('id')
+            ->all());
     }
 
     /**

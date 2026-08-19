@@ -12,6 +12,7 @@
             'photos' => $photosInitiales,
             'complet' => $complet,
             'monVote' => $monVote,
+            'monVoteNom' => $monVoteNom,
             'maPhotoId' => $maPhotoId,
             'peutVoter' => $phase->allowsVoting(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
@@ -20,7 +21,8 @@
         <header class="flex items-baseline justify-between gap-4">
             <div>
                 <h1 class="titre text-26 text-ivoire">Galerie</h1>
-                <p class="mt-2 text-14 text-ivoire-bas">
+                {{-- x-text : la consigne suit la phase, que le polling rafraîchit toutes les 3 s --}}
+                <p class="mt-2 text-14 text-ivoire-bas" x-text="texteEntete()">
                     @if ($phase->allowsVoting())
                         Touchez une photo pour voter. Vous pouvez changer d’avis à tout moment.
                     @else
@@ -127,10 +129,9 @@
                             :class="confirmationVote ? 'text-or-clair' : 'text-ivoire-bas'"
                             x-text="confirmationVote ? 'Vote enregistré ✓' : (monVote ? 'Mon vote' : 'Galerie')"
                         ></p>
-                        <p
-                            class="truncate text-16 font-medium text-ivoire"
-                            x-text="nomDeMonVote() ?? '{{ $phase->allowsVoting() ? 'Touchez une photo pour voter' : 'Votes fermés' }}'"
-                        ></p>
+                        <p class="truncate text-16 font-medium text-ivoire" x-text="texteBarre()">
+                            {{ $monVoteNom ?? ($phase->allowsVoting() ? 'Touchez une photo pour voter' : 'Votes fermés') }}
+                        </p>
                     </div>
                     <x-bouton variante="secondaire" :href="route('classement')" class="shrink-0">Classement</x-bouton>
                 </div>

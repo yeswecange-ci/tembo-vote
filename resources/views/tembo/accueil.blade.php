@@ -13,8 +13,15 @@
     $noteVote = match (true) {
         $phase->allowsVoting() => null,
         $phase === Phase::Setup => 'Le vote ouvrira pendant la soirée.',
-        default => 'Les votes sont clos.',
+        $phase === Phase::Frozen => 'Votes clos. La remise du prix se fait sur scène.',
+        $phase === Phase::Reveal => 'Le gagnant est révélé sur scène en ce moment.',
+        default => 'Merci d’avoir participé à la soirée.',
     };
+
+    // Votes clos ne veut pas dire écran mort : la galerie et le classement
+    // restent consultables, l'invité garde quelque chose à regarder plutôt
+    // que deux boutons éteints jusqu'à la fin de la soirée.
+    $peutParcourir = ! $phase->allowsVoting() && $phase !== Phase::Setup && $publishedCount > 0;
 @endphp
 
 <x-layouts.guest title="Bienvenue">
@@ -61,6 +68,15 @@
                             photo{{ $publishedCount > 1 ? 's' : '' }} déjà dans la galerie
                         </p>
                     @endif
+                @elseif ($peutParcourir)
+                    <x-bouton variante="secondaire" :href="route('classement')" class="min-h-14 w-full">
+                        Voir le classement
+                    </x-bouton>
+                    <p class="mt-3 text-center text-12 text-ivoire-bas">{{ $noteVote }}</p>
+                    {{-- Libellé court : à 320 px, la ligne ne doit pas passer sur deux --}}
+                    <x-bouton variante="discret" :href="route('galerie.index')" class="mt-2 w-full">
+                        Revoir les photos
+                    </x-bouton>
                 @else
                     <x-bouton variante="secondaire" class="min-h-14 w-full" disabled>Voter</x-bouton>
                     <p class="mt-3 text-center text-12 text-ivoire-bas">{{ $noteVote }}</p>

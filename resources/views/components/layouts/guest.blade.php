@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="theme-color" content="#12100F">
+    {{-- Barre du navigateur au ton du fond global : le thème clair est le défaut --}}
+    <meta name="theme-color" content="#FAF7F2">
     <title>{{ $title ?? config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -21,8 +22,5 @@
             {{ config('tembo.legal.responsible_drinking') }}
         </footer>
     </div>
-
-    {{-- Emplacement de la barre de vote fixe (Module 4) --}}
-    {{ $barreFixe ?? '' }}
 </body>
 </html>

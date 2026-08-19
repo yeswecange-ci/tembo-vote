@@ -12,7 +12,11 @@
             <h1 class="titre text-26 text-ivoire">Classement</h1>
             <p class="mt-2 text-14 text-ivoire-bas">
                 @if ($phase === Phase::Frozen)
-                    Votes clos — le gagnant sera révélé sur scène.
+                    Votes clos, classement figé. La remise du prix se fait sur scène.
+                @elseif ($phase === Phase::Reveal)
+                    Le gagnant est révélé sur scène en ce moment.
+                @elseif ($phase === Phase::Closed)
+                    Le Top 5 final de la soirée. Merci d’avoir participé.
                 @else
                     Le Top 5 de la soirée. Les compteurs vivent sur l’écran de la salle.
                 @endif

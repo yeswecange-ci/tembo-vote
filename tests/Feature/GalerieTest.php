@@ -222,3 +222,96 @@ it('classe le Top 5 par votes sans afficher les compteurs', function () {
     // 6 photos publiées, mais seulement 5 au classement
     expect(substr_count($reponse->content(), 'rounded-full'))->toBe(5);
 });
+
+// ----- Phase et galerie -----
+
+it('expose le droit de voter au polling et change d’ETag avec la phase', function () {
+    Photo::factory()->approved()->create();
+
+    $ouvert = requeteGalerie($this)->assertOk()->assertJson(['peutVoter' => true]);
+
+    EventPhase::set(Phase::Frozen);
+
+    // La clôture des votes ne peut pas être masquée par un 304 : la phase
+    // entre dans l'ETag, le téléphone déjà ouvert l'apprend en 3 secondes.
+    $ferme = requeteGalerie($this, [], ['If-None-Match' => $ouvert->headers->get('ETag')])
+        ->assertOk()
+        ->assertJson(['peutVoter' => false]);
+
+    expect($ferme->headers->get('ETag'))->not->toBe($ouvert->headers->get('ETag'));
+});
+
+it('supprime les votes portés par une photo retirée de la galerie', function () {
+    $moderateur = User::factory()->create();
+    $photo = Photo::factory()->approved()->create();
+
+    voter($this, $photo)->assertOk();
+
+    $this->actingAs($moderateur)->post(route('regie.photos.retirer', $photo->refresh()));
+
+    // Sinon l'invité garde un vote mort et le total du mur LED reste gonflé
+    expect(Vote::query()->count())->toBe(0)
+        ->and($photo->refresh()->votes_count)->toBe(0);
+});
+
+it('rend son vote à l’invité dont la photo votée a été retirée', function () {
+    $moderateur = User::factory()->create();
+    $retiree = Photo::factory()->approved()->create();
+    $autre = Photo::factory()->approved()->create();
+
+    voter($this, $retiree)->assertOk();
+    $this->actingAs($moderateur)->post(route('regie.photos.retirer', $retiree->refresh()));
+
+    voter($this, $autre)->assertOk();
+
+    expect($autre->refresh()->votes_count)->toBe(1)
+        ->and(Vote::query()->sole()->photo_id)->toBe($autre->id);
+});
+
+it('nomme le vote même quand sa photo est hors de la page initiale', function () {
+    $ancienne = Photo::factory()->approved()->create(['display_name' => 'Aïcha', 'created_at' => now()->subHour()]);
+    Photo::factory()->approved()->count(30)->create(['display_name' => 'Autre']);
+    GalleryCache::invalidate();
+
+    Vote::factory()->create([
+        'guest_session_id' => $this->guestSession->id,
+        'photo_id' => $ancienne->id,
+    ]);
+
+    // Les 30 photos chargées ne contiennent pas la sienne : le nom doit venir
+    // du serveur, sans quoi la barre fixe annonce « Mon vote » sans nom.
+    $this->withCookie(EnsureGuestSession::COOKIE, $this->guestSession->id)
+        ->get(route('galerie.index'))
+        ->assertOk()
+        ->assertSee('Aïcha');
+});
+
+it('signale au polling les photos retirées de la galerie', function () {
+    $moderateur = User::factory()->create();
+    $retiree = Photo::factory()->approved()->create(['display_name' => 'Retirée']);
+    $refusee = Photo::factory()->create(['display_name' => 'Refusée']);
+    Photo::factory()->approved()->create(['display_name' => 'Restée']);
+
+    expect(collect(requeteGalerie($this)->json('photos'))->pluck('nom'))->toContain('Retirée');
+
+    // Un refus en modération n'a jamais atteint la galerie : rien à retirer
+    $this->actingAs($moderateur)->post(route('regie.photos.refuser', $refusee), [
+        'verrou' => $refusee->updated_at->toDateTimeString(),
+        'reason' => 'produit absent',
+    ]);
+    $this->actingAs($moderateur)->post(route('regie.photos.retirer', $retiree->refresh()));
+
+    $reponse = requeteGalerie($this)->assertOk();
+
+    expect(collect($reponse->json('photos'))->pluck('nom')->all())->toBe(['Restée'])
+        ->and($reponse->json('retirees'))->toBe([$retiree->id]);
+});
+
+it('signale aussi le retrait d’une photo par son auteur', function () {
+    $auteur = GuestSession::factory()->create();
+    $photo = Photo::factory()->approved()->create(['guest_session_id' => $auteur->id]);
+
+    $this->withCookie(EnsureGuestSession::COOKIE, $auteur->id)->post(route('photos.retrait'));
+
+    expect(requeteGalerie($this)->json('retirees'))->toBe([$photo->id]);
+});

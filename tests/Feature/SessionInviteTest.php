@@ -91,3 +91,19 @@ it('la machine à états expose la phase courante avec setup par défaut', funct
 
     expect(EventPhase::current())->toBe(Phase::VoteOnly);
 });
+
+it('garde une destination pour l’invité après la clôture des votes', function () {
+    EventPhase::set(Phase::Frozen);
+    $guestSession = GuestSession::factory()->create();
+    Photo::factory()->approved()->create();
+    GalleryCache::invalidate();
+
+    // Deux boutons éteints pendant toute la fin de soirée : la galerie et le
+    // classement restent consultables, l'accueil doit y mener.
+    $this->withCookie(EnsureGuestSession::COOKIE, $guestSession->id)
+        ->get(route('tembo.accueil'))
+        ->assertOk()
+        ->assertSee('Voir le classement')
+        ->assertSee(route('classement'))
+        ->assertSee(route('galerie.index'));
+});

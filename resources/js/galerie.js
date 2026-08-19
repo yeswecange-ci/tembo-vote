@@ -13,6 +13,7 @@ export default function galerie() {
     return {
         photos: [],
         monVote: null,
+        monVoteNom: null,
         maPhotoId: null,
         peutVoter: false,
         complet: true,
@@ -34,6 +35,7 @@ export default function galerie() {
             const initial = JSON.parse(this.$el.dataset.initial);
             this.photos = initial.photos;
             this.monVote = initial.monVote;
+            this.monVoteNom = initial.monVoteNom;
             this.maPhotoId = initial.maPhotoId;
             this.peutVoter = initial.peutVoter;
             this.complet = initial.complet;
@@ -90,6 +92,16 @@ export default function galerie() {
                 const donnees = await reponse.json();
                 this.horsLigne = false;
 
+                // La phase voyage avec la galerie : le vote se ferme ici, en
+                // 3 secondes, sans que l'invité ait à recharger la page.
+                if (typeof donnees.peutVoter === 'boolean') {
+                    this.peutVoter = donnees.peutVoter;
+                }
+
+                if (Array.isArray(donnees.retirees) && donnees.retirees.length) {
+                    this.retirer(donnees.retirees);
+                }
+
                 if (donnees.photos.length) {
                     const connus = new Set(this.photos.map((photo) => photo.id));
                     const fraiches = donnees.photos.filter((photo) => !connus.has(photo.id));
@@ -98,6 +110,33 @@ export default function galerie() {
                 }
             } catch {
                 this.horsLigne = true;
+            }
+        },
+
+        /**
+         * Une photo retirée quitte la grille sans attendre un rechargement : le
+         * polling n'ajoute pas seulement, il retire aussi. Si c'était la photo
+         * votée, le serveur a déjà libéré le vote — l'invité doit le savoir
+         * plutôt que de croire avoir voté.
+         */
+        retirer(retirees) {
+            const sorties = new Set(retirees);
+            const restantes = this.photos.filter((photo) => !sorties.has(photo.id));
+
+            // Jamais de réaffectation sans raison : la liste arrive à chaque
+            // sondage et la grille se redessinerait toutes les 3 secondes.
+            if (restantes.length !== this.photos.length) {
+                this.photos = restantes;
+            }
+
+            // Le vote peut porter sur une photo absente de la grille chargée :
+            // ce test ne dépend pas de ce qui vient d'être retiré à l'écran.
+            if (this.monVote && sorties.has(this.monVote)) {
+                this.monVote = null;
+                this.monVoteNom = null;
+                this.erreurGlobale = this.peutVoter
+                    ? 'La photo que vous aviez choisie a été retirée de la galerie. Touchez une autre photo pour voter à nouveau.'
+                    : 'La photo que vous aviez choisie a été retirée de la galerie.';
             }
         },
 
@@ -173,7 +212,9 @@ export default function galerie() {
             }
 
             const votePrecedent = this.monVote;
+            const nomPrecedent = this.monVoteNom;
             this.monVote = photoId;
+            this.monVoteNom = (this.photos.find((photo) => photo.id === photoId) || {}).nom ?? null;
             this.erreurGlobale = null;
 
             try {
@@ -193,6 +234,7 @@ export default function galerie() {
                 }
 
                 this.monVote = votePrecedent;
+                this.monVoteNom = nomPrecedent;
 
                 if (reponse.status === 401) {
                     window.location.assign('/tembo');
@@ -205,6 +247,7 @@ export default function galerie() {
                     'Le vote n’a pas été pris en compte. Réessayez.';
             } catch {
                 this.monVote = votePrecedent;
+                this.monVoteNom = nomPrecedent;
                 this.erreurGlobale = 'Le réseau a coupé : votre vote n’a pas été pris en compte. Réessayez.';
             }
         },
@@ -232,9 +275,27 @@ export default function galerie() {
             }, 2500);
         },
 
+        /** Le nom du vote, même si sa photo n'est pas parmi celles chargées. */
         nomDeMonVote() {
+            if (!this.monVote) {
+                return null;
+            }
+
             const photo = this.photos.find((candidate) => candidate.id === this.monVote);
-            return photo ? photo.nom : null;
+
+            return photo ? photo.nom : this.monVoteNom;
+        },
+
+        /** Consigne d'en-tête : suit la phase reçue au polling. */
+        texteEntete() {
+            return this.peutVoter
+                ? 'Touchez une photo pour voter. Vous pouvez changer d’avis à tout moment.'
+                : 'Les votes sont fermés pour le moment.';
+        },
+
+        /** Ligne principale de la barre fixe : mon vote, ou la consigne du moment. */
+        texteBarre() {
+            return this.nomDeMonVote() ?? (this.peutVoter ? 'Touchez une photo pour voter' : 'Votes fermés');
         },
     };
 }

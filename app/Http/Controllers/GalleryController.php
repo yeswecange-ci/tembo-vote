@@ -23,12 +23,16 @@ class GalleryController extends Controller
 
         $photos = GalleryCache::photos();
         $initiales = array_reverse(array_slice($photos, -self::PAGE_SIZE));
+        $vote = $guestSession->vote;
 
         return view('tembo.galerie', [
             'phase' => EventPhase::current(),
             'photosInitiales' => $initiales,
             'complet' => count($photos) <= self::PAGE_SIZE,
-            'monVote' => $guestSession->vote?->photo_id,
+            'monVote' => $vote?->photo_id,
+            // Le nom accompagne l'id : la barre fixe doit pouvoir nommer un
+            // vote porté sur une photo absente des 30 premières chargées.
+            'monVoteNom' => $vote?->photo?->display_name,
             'maPhotoId' => $guestSession->photo?->id,
         ]);
     }
@@ -43,8 +47,12 @@ class GalleryController extends Controller
         $apres = $request->query('apres');
         $avant = $request->query('avant');
         $tout = $request->boolean('tout');
+        $phase = EventPhase::current();
 
-        $etag = 'W/"galerie-'.GalleryCache::version().'-'.md5((string) $apres.'|'.(string) $avant.'|'.(int) $tout).'"';
+        // La phase entre dans l'ETag : sans elle, la clôture des votes serait
+        // masquée par un 304 et les téléphones déjà ouverts continueraient
+        // d'inviter au vote.
+        $etag = 'W/"galerie-'.GalleryCache::version().'-'.$phase->value.'-'.md5((string) $apres.'|'.(string) $avant.'|'.(int) $tout).'"';
 
         if ($request->headers->get('If-None-Match') === $etag) {
             return response('', 304)->header('ETag', $etag);
@@ -72,6 +80,12 @@ class GalleryController extends Controller
             // Plus récentes d'abord, comme dans la grille
             'photos' => array_reverse($photos),
             'complet' => $complet,
+            // La phase voyage avec la galerie : un téléphone resté ouvert sait
+            // en 3 secondes que les votes sont clos, sans recharger la page.
+            'peutVoter' => $phase->allowsVoting(),
+            // Le polling ne fait pas qu'ajouter : une photo retirée doit quitter
+            // les grilles déjà affichées, sans attendre un rechargement.
+            'retirees' => GalleryCache::removed(),
         ])->withHeaders([
             'ETag' => $etag,
             'Cache-Control' => 'no-cache',

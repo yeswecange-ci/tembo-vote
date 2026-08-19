@@ -14,6 +14,7 @@ use App\Support\GalleryCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -97,11 +98,21 @@ class PhotoController extends Controller
             return redirect()->route('photos.create');
         }
 
-        $photo->update([
-            'status' => PhotoStatus::Rejected,
-            'reject_reason' => config('tembo.removal_reason'),
-            'moderated_at' => now(),
-        ]);
+        DB::transaction(function () use ($photo): void {
+            // votes_count n'est pas fillable : forceFill pour le remettre à zéro
+            // en même temps que le statut, dans la même écriture.
+            $photo->forceFill([
+                'status' => PhotoStatus::Rejected,
+                'reject_reason' => config('tembo.removal_reason'),
+                'moderated_at' => now(),
+                'votes_count' => 0,
+            ])->save();
+
+            // Les votes partent avec la photo : sinon leurs auteurs gardent un
+            // vote mort — ils croient avoir voté — et le total affiché sur le
+            // mur LED reste gonflé par des votes sans destinataire.
+            $photo->votes()->delete();
+        });
 
         AuditLog::write('photo.removed', 'invité (retrait sur demande)', 'photo', $photo->id);
         GalleryCache::invalidate();

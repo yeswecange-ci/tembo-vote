@@ -6,6 +6,7 @@ use App\Enums\Phase;
 use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Photo;
+use App\Models\Setting;
 use App\Services\AccessTokenService;
 use App\Support\EventPhase;
 use Illuminate\Http\RedirectResponse;
@@ -42,6 +43,14 @@ class SoireeController extends Controller
         ]);
 
         $phase = Phase::from($validated['phase']);
+
+        // Deux boutons mènent à la révélation : celui de la page Révélation
+        // exige la relecture humaine du classement, seul garde-fou anti-triche
+        // du dispositif. Celui-ci ne doit pas la contourner à un clic près.
+        if ($phase === Phase::Reveal && Setting::getValue('winner_photo_id') === null) {
+            return redirect()->route('regie.revelation')
+                ->with('erreur', 'Validez d’abord le classement final : c’est la relecture humaine qui protège la remise du prix.');
+        }
 
         EventPhase::set($phase);
 

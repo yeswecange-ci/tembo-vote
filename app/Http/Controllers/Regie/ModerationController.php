@@ -7,10 +7,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RejectPhotoRequest;
 use App\Models\AuditLog;
 use App\Models\Photo;
+use App\Models\Vote;
 use App\Support\GalleryCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 /**
@@ -100,16 +102,28 @@ class ModerationController extends Controller
      */
     public function remove(Request $request, Photo $photo): RedirectResponse
     {
-        $updated = Photo::query()
-            ->whereKey($photo->id)
-            ->where('status', PhotoStatus::Approved->value)
-            ->update([
-                'status' => PhotoStatus::Rejected->value,
-                'reject_reason' => config('tembo.removal_reason'),
-                'moderated_by' => $request->user()->id,
-                'moderated_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $updated = DB::transaction(function () use ($request, $photo): int {
+            $updated = Photo::query()
+                ->whereKey($photo->id)
+                ->where('status', PhotoStatus::Approved->value)
+                ->update([
+                    'status' => PhotoStatus::Rejected->value,
+                    'reject_reason' => config('tembo.removal_reason'),
+                    'moderated_by' => $request->user()->id,
+                    'moderated_at' => now(),
+                    'updated_at' => now(),
+                    'votes_count' => 0,
+                ]);
+
+            if ($updated > 0) {
+                // Les votes partent avec la photo : sinon leurs auteurs gardent
+                // un vote mort — ils croient avoir voté — et le total affiché
+                // sur le mur LED reste gonflé par des votes sans destinataire.
+                Vote::query()->where('photo_id', $photo->id)->delete();
+            }
+
+            return $updated;
+        });
 
         if ($updated === 0) {
             return redirect()->route('regie.publiees')
