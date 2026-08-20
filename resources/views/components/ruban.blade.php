@@ -1,5 +1,5 @@
 {{--
-    Ruban Tembo — le bandeau à bords ondulés du logo, repris comme motif
+    Ruban Castel — le bandeau à bords ondulés du logo, repris comme motif
     structurel. Seul écart décoratif autorisé du projet, à exactement
     deux endroits : sous le titre du Mode Écran (filet or) et en bord
     supérieur de la barre de vote mobile (plein rouge).

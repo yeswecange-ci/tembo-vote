@@ -150,7 +150,7 @@
                 <p class="titre text-[clamp(2.5rem,9vh,8rem)] text-ivoire">Merci</p>
                 <x-ruban class="mx-auto mt-[2vh] w-[24vw]" />
             </div>
-            <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">Soirée Castel Beer Afterwork · 14 août 2026</p>
+            <p class="text-[clamp(1rem,2.8vh,2.25rem)] text-ivoire-bas">Soirée Castel Beer Afterwork · 21 août 2026</p>
         </section>
 
         {{-- Bandeau du bas : stats + consommation responsable, sur tous les écrans --}}

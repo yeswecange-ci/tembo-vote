@@ -7,7 +7,7 @@
     <div class="flex min-h-full flex-col justify-center py-10">
         <x-etat-vide :titre="$phase === Phase::Setup ? 'La publication n’est pas encore ouverte' : 'La publication est terminée'">
             @if ($phase === Phase::Setup)
-                Revenez au lancement de la soirée pour publier votre selfie avec votre Tembo.
+                Revenez au lancement de la soirée pour publier votre selfie avec votre Castel.
             @else
                 Merci d’avoir participé à la soirée Castel Beer Afterwork.
             @endif

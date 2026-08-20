@@ -2,7 +2,7 @@
 
 /*
 |--------------------------------------------------------------------------
-| Dispositif Selfie & Vote — soirée Club Tembo du 14 août 2026
+| Dispositif Selfie & Vote — Soirée Castel Beer Afterwork du 21 août 2026
 |--------------------------------------------------------------------------
 | Tout ce qui doit pouvoir changer sans toucher au code est centralisé ici :
 | textes juridiques, seuils, durées, clés. Rien de tout cela n'est codé en
@@ -35,8 +35,8 @@ return [
     ],
 
     // Expiration de toutes les sessions invité, heure de Kinshasa.
-    // Le 15 à 06:00 et non minuit : la soirée du 14 se termine après minuit.
-    'session_expires_at' => env('TEMBO_SESSION_EXPIRES_AT', '2026-08-15 06:00'),
+    // Le 22 à 06:00 et non minuit : la soirée du 21 se termine après minuit.
+    'session_expires_at' => env('TEMBO_SESSION_EXPIRES_AT', '2026-08-22 06:00'),
 
     /*
     |--------------------------------------------------------------------------

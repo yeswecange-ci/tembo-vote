@@ -1,4 +1,4 @@
-# RUNBOOK — Soirée Club Tembo · 14 août 2026
+# RUNBOOK — Soirée Castel Beer Afterwork · 21 août 2026
 
 Ce document s'adresse à l'équipe sur place (régie, modérateurs, agence).
 **Aucune compétence technique n'est nécessaire** pour les sections 1 à 6.

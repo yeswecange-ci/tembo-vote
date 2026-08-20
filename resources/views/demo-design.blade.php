@@ -70,10 +70,10 @@
             <div class="rounded border border-nuit-bord bg-nuit-haut p-4">
                 <p class="text-12 text-ivoire-bas">Archivo variable · wdth 120 · majuscules · display</p>
                 <div class="mt-3 space-y-2 overflow-hidden">
-                    <p class="titre text-20 text-ivoire">Tembo <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">20</span></p>
-                    <p class="titre text-26 text-ivoire">Tembo <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">26</span></p>
-                    <p class="titre text-34 text-ivoire">Tembo <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">34</span></p>
-                    <p class="titre text-48 text-ivoire">Tembo <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">48</span></p>
+                    <p class="titre text-20 text-ivoire">Castel <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">20</span></p>
+                    <p class="titre text-26 text-ivoire">Castel <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">26</span></p>
+                    <p class="titre text-34 text-ivoire">Castel <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">34</span></p>
+                    <p class="titre text-48 text-ivoire">Castel <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">48</span></p>
                     {{-- 72 : taille réservée au mur LED et à la révélation — spécimen court pour tenir en 320 px --}}
                     <p class="titre text-72 text-ivoire">Vote <span class="font-mono text-12 text-ivoire-bas normal-case tracking-normal">72</span></p>
                 </div>
@@ -83,7 +83,7 @@
             <div class="rounded border border-nuit-bord bg-nuit-haut p-4">
                 <p class="text-12 text-ivoire-bas">Instrument Sans · corps, libellés, boutons</p>
                 <div class="mt-3 space-y-2">
-                    <p class="text-16 text-ivoire">Prenez un selfie avec votre Tembo 50 Cl et publiez-le dans la galerie de la soirée. <span class="font-mono text-12 text-ivoire-bas">16 / 400</span></p>
+                    <p class="text-16 text-ivoire">Prenez un selfie avec votre Castel 50 Cl et publiez-le dans la galerie de la soirée. <span class="font-mono text-12 text-ivoire-bas">16 / 400</span></p>
                     <p class="text-16 font-medium text-ivoire">Votre photo est en cours de validation. <span class="font-mono text-12 text-ivoire-bas">16 / 500</span></p>
                     <p class="text-14 text-ivoire-bas">Texte secondaire : libellés, aides, précisions. <span class="font-mono text-12">14</span></p>
                     <p class="text-12 text-ivoire-bas">Mentions légales et notes de pied de page. <span class="font-mono">12</span></p>
@@ -145,14 +145,14 @@
             <x-champ
                 label="Prénom ou pseudo"
                 name="demo-prenom"
-                placeholder="Aïcha"
+                placeholder="Votre Prénom"
                 aide="2 à 24 caractères. C'est le nom affiché sous votre photo."
             />
 
             <x-champ
                 label="Champ en erreur"
                 name="demo-erreur"
-                placeholder="Aïcha"
+                placeholder="Votre Prénom"
                 erreur="Ce prénom dépasse 24 caractères. Raccourcissez-le pour continuer."
             />
 
@@ -187,11 +187,11 @@
             </div>
         </section>
 
-        {{-- ================= 06 · Ruban Tembo ================= --}}
+        {{-- ================= 06 · Ruban Castel ================= --}}
         <section class="space-y-4">
             <h2 class="flex items-baseline gap-3 border-b border-nuit-bord pb-2">
                 <span class="font-mono text-12 text-or-clair">06</span>
-                <span class="titre text-16 text-ivoire">Ruban Tembo</span>
+                <span class="titre text-16 text-ivoire">Ruban Castel</span>
             </h2>
 
             <p class="text-14 text-ivoire-bas">

@@ -36,6 +36,9 @@ it('affiche l’écran de capture en phase open', function () {
         ->assertOk()
         ->assertSee('Prendre un selfie')
         ->assertSee('Choisir dans la galerie')
+        // Marque et invite du champ prénom (décisions client du 20/08/2026)
+        ->assertSee('votre Castel')
+        ->assertSee('placeholder="Votre Prénom"', false)
         // Le formulaire ne demande plus que le prénom : ni case à cocher,
         // ni mention de consentement
         ->assertDontSee('type="checkbox"', false)

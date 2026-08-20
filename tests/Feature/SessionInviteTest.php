@@ -37,7 +37,11 @@ it('affiche l’accueil et ses deux actions avec une session active', function (
         ->get(route('tembo.accueil'))
         ->assertOk()
         ->assertSee('Publier ma photo')
-        ->assertSee('Voter');
+        ->assertSee('Voter')
+        // Marque et date de la soirée, vues par tous les invités
+        ->assertSee('21 août 2026 · Kinshasa')
+        ->assertSee('votre Castel')
+        ->assertDontSee('Tembo');
 });
 
 it('explique pourquoi les actions sont fermées en phase de préparation', function () {

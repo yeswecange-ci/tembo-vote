@@ -31,10 +31,10 @@
             <x-pastille-logo />
             <div>
                 <h1 class="titre text-26 text-ivoire">Soirée Castel Beer Afterwork</h1>
-                <p class="mt-2 font-mono text-14 text-or-clair">14 août 2026 · Kinshasa</p>
+                <p class="mt-2 font-mono text-14 text-or-clair">21 août 2026 · Kinshasa</p>
             </div>
             <p class="max-w-xs text-14 text-ivoire-bas">
-                Un selfie avec votre Tembo, vos votes, un gagnant révélé sur scène.
+                Un selfie avec votre Castel, vos votes, un gagnant révélé sur scène.
             </p>
         </header>
 
@@ -143,7 +143,7 @@
                 <li class="flex gap-4">
                     <span class="font-mono text-20 leading-none text-or-clair">1</span>
                     <div>
-                        <p class="text-14 font-medium text-ivoire">Prenez un selfie avec votre Tembo</p>
+                        <p class="text-14 font-medium text-ivoire">Prenez un selfie avec votre Castel</p>
                         <p class="mt-1 text-12 text-ivoire-bas">Depuis votre téléphone, en un geste — la photo est compressée automatiquement.</p>
                     </div>
                 </li>

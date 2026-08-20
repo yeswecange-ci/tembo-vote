@@ -9,7 +9,7 @@ Cahier des charges complet : `prompt-claude-code-tembo-selfie-vote.md` (fait aut
 
 **Vote (décision client du 20/08/2026, remplace la règle du vote unique du cahier des charges)** : l'invité vote pour **autant de photos qu'il veut, une seule fois par photo** (un second appui retire le vote), et **jamais pour la sienne**. L'unicité en base porte sur `(guest_session_id, photo_id)`. Le **classement invité affiche le nombre de votes** par photo, au nom de la transparence ; **la galerie reste sans chiffres** — l'effet de meute se joue au moment du choix, pas après. Conséquence en régie : un même `device_hash` portant plusieurs votes est devenu normal, le signal de fraude est désormais un `device_hash` derrière **plusieurs sessions invité**.
 
-1. **Événement unique** — soirée du 14/08/2026, 5 heures, aucune seconde chance. La robustesse prime sur l'élégance architecturale.
+1. **Événement unique** — soirée du 21/08/2026, 5 heures, aucune seconde chance. La robustesse prime sur l'élégance architecturale.
 2. **8 jours de dev** — zéro over-engineering, aucune abstraction « au cas où ».
 3. **100 % web** — Safari iOS 16+, Chrome Android récent. Desktop uniquement pour back-office et mur LED.
 4. **Privé** — aucun accès sans session valide, noindex total, expiration automatique.

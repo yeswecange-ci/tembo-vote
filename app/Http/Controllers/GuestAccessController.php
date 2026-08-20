@@ -95,8 +95,8 @@ class GuestAccessController extends Controller
     }
 
     /**
-     * Toutes les sessions expirent à l'heure fixée en config (le 15/08 à
-     * 06:00, la soirée du 14 se terminant après minuit). Si cette date est
+     * Toutes les sessions expirent à l'heure fixée en config (le 22/08 à
+     * 06:00, la soirée du 21 se terminant après minuit). Si cette date est
      * déjà passée (développement, répétition), la session vit 8 heures
      * plutôt que de naître morte.
      */

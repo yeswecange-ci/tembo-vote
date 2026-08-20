@@ -15,8 +15,8 @@
             <h1 class="titre mt-2 text-26 text-ivoire">Votre photo</h1>
             <p class="mt-3 text-14 text-ivoire-bas" x-text="etape === 'details'
                 ? 'Le prénom affiché et votre accord, puis c’est envoyé.'
-                : 'Un selfie avec votre Tembo — une seule photo par invité, choisissez la bonne.'">
-                Un selfie avec votre Tembo — une seule photo par invité, choisissez la bonne.
+                : 'Un selfie avec votre Castel — une seule photo par invité, choisissez la bonne.'">
+                Un selfie avec votre Castel — une seule photo par invité, choisissez la bonne.
             </p>
         </header>
 
@@ -95,7 +95,7 @@
                     type="text"
                     maxlength="24"
                     autocomplete="given-name"
-                    placeholder="Aïcha"
+                    placeholder="Votre Prénom"
                     x-model="nom"
                     class="block min-h-11 w-full rounded border bg-nuit-haut px-4 text-16 text-ivoire placeholder:text-ivoire-bas"
                     :class="premiereErreur('display_name') ? 'border-rouge' : 'border-nuit-bord'"

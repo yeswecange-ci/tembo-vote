@@ -50,7 +50,7 @@
                         <div class="flex size-9 items-center justify-center rounded-full border border-nuit-bord bg-creme">
                             <img src="{{ asset('images/logo-castel.png') }}" alt="" class="w-6">
                         </div>
-                        <span class="titre text-14 text-or-clair">Régie Tembo</span>
+                        <span class="titre text-14 text-or-clair">Régie Castel</span>
                     </div>
                     <button
                         type="button"
@@ -133,7 +133,7 @@
                 {{-- En-tête desktop --}}
                 <header class="hidden h-16 items-center justify-between border-b border-nuit-bord px-8 lg:flex">
                     <h1 class="titre text-20 text-ivoire">{{ $title }}</h1>
-                    <p class="text-12 text-ivoire-bas">Soirée Castel Beer Afterwork · 14 août 2026</p>
+                    <p class="text-12 text-ivoire-bas">Soirée Castel Beer Afterwork · 21 août 2026</p>
                 </header>
 
                 <main class="mx-auto w-full max-w-5xl flex-1 px-4 py-6 lg:px-8">
