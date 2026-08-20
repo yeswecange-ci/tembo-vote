@@ -48,7 +48,9 @@ return [
         // toute la salle partage la même IP publique — un blocage par IP y
         // ferait tomber les invités légitimes en pleine arrivée.
         'upload' => ['attempts' => 3, 'decay_minutes' => 1],
-        'vote' => ['attempts' => 10, 'decay_minutes' => 1],
+        // Le multi-vote rend légitime une rafale d'appuis : la limite ne protège
+        // plus du double vote (l'unicité en base s'en charge) mais du martelage.
+        'vote' => ['attempts' => 60, 'decay_minutes' => 1],
         'admin_login' => ['attempts' => 5, 'decay_minutes' => 10],
     ],
 

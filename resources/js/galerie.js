@@ -4,17 +4,20 @@
  * - Polling toutes les 3 s avec ETag : si rien n'a changé, le serveur répond
  *   304 et aucun corps n'est retransmis.
  * - Défilement infini par curseur (created_at + id).
- * - Un seul vote actif, changeable d'un appui ; mise à jour optimiste avec
- *   retour arrière si le serveur refuse.
+ * - Autant de votes que l'invité veut, un par photo, jamais pour la sienne ;
+ *   un second appui retire le vote. Mise à jour optimiste avec retour arrière
+ *   si le serveur refuse.
  * - Si le réseau tombe, l'interface garde le dernier état connu et signale
  *   discrètement la reconnexion. Elle ne se vide jamais.
  */
 export default function galerie() {
     return {
         photos: [],
-        monVote: null,
-        monVoteNom: null,
+        mesVotes: [],
         maPhotoId: null,
+        // Appuis en cours, par photo : sur 4G, l'invité tape deux fois avant la
+        // première réponse et annulerait sans le savoir son propre vote.
+        enVol: {},
         peutVoter: false,
         complet: true,
         horsLigne: false,
@@ -34,8 +37,7 @@ export default function galerie() {
         init() {
             const initial = JSON.parse(this.$el.dataset.initial);
             this.photos = initial.photos;
-            this.monVote = initial.monVote;
-            this.monVoteNom = initial.monVoteNom;
+            this.mesVotes = initial.mesVotes;
             this.maPhotoId = initial.maPhotoId;
             this.peutVoter = initial.peutVoter;
             this.complet = initial.complet;
@@ -129,14 +131,15 @@ export default function galerie() {
                 this.photos = restantes;
             }
 
-            // Le vote peut porter sur une photo absente de la grille chargée :
+            // Un vote peut porter sur une photo absente de la grille chargée :
             // ce test ne dépend pas de ce qui vient d'être retiré à l'écran.
-            if (this.monVote && sorties.has(this.monVote)) {
-                this.monVote = null;
-                this.monVoteNom = null;
-                this.erreurGlobale = this.peutVoter
-                    ? 'La photo que vous aviez choisie a été retirée de la galerie. Touchez une autre photo pour voter à nouveau.'
-                    : 'La photo que vous aviez choisie a été retirée de la galerie.';
+            const votesPerdus = this.mesVotes.filter((id) => sorties.has(id));
+
+            if (votesPerdus.length) {
+                this.mesVotes = this.mesVotes.filter((id) => !sorties.has(id));
+                this.erreurGlobale = votesPerdus.length > 1
+                    ? votesPerdus.length + ' photos que vous aviez choisies ont été retirées de la galerie : vos votes sont partis avec elles.'
+                    : 'Une photo que vous aviez choisie a été retirée de la galerie : votre vote est parti avec elle.';
             }
         },
 
@@ -205,16 +208,22 @@ export default function galerie() {
             }
         },
 
-        /** Un appui sur une photo = un vote. Optimiste, avec retour arrière. */
+        estVote(photoId) {
+            return this.mesVotes.includes(photoId);
+        },
+
+        /**
+         * Un appui = un vote, un second appui le retire. Sa propre photo n'est
+         * jamais votable. Optimiste, avec retour arrière si le serveur refuse.
+         */
         async voter(photoId) {
-            if (!this.peutVoter || this.monVote === photoId) {
+            if (!this.peutVoter || photoId === this.maPhotoId || this.enVol[photoId]) {
                 return;
             }
 
-            const votePrecedent = this.monVote;
-            const nomPrecedent = this.monVoteNom;
-            this.monVote = photoId;
-            this.monVoteNom = (this.photos.find((photo) => photo.id === photoId) || {}).nom ?? null;
+            const etaitVotee = this.estVote(photoId);
+            this.enVol[photoId] = true;
+            this.appliquerVote(photoId, !etaitVotee);
             this.erreurGlobale = null;
 
             try {
@@ -229,12 +238,18 @@ export default function galerie() {
                 });
 
                 if (reponse.ok) {
-                    this.confirmerVote(photoId, votePrecedent);
+                    // Le serveur fait foi : il a pu retirer là où le client
+                    // croyait ajouter (deux onglets ouverts, un appui perdu).
+                    const donnees = await reponse.json().catch(() => null);
+                    if (donnees && typeof donnees.vote === 'boolean') {
+                        this.appliquerVote(photoId, donnees.vote);
+                    }
+
+                    this.confirmerVote(photoId);
                     return;
                 }
 
-                this.monVote = votePrecedent;
-                this.monVoteNom = nomPrecedent;
+                this.appliquerVote(photoId, etaitVotee);
 
                 if (reponse.status === 401) {
                     window.location.assign('/tembo');
@@ -246,26 +261,33 @@ export default function galerie() {
                     (donnees && (donnees.message || (donnees.errors && donnees.errors.photo_id && donnees.errors.photo_id[0]))) ||
                     'Le vote n’a pas été pris en compte. Réessayez.';
             } catch {
-                this.monVote = votePrecedent;
-                this.monVoteNom = nomPrecedent;
+                this.appliquerVote(photoId, etaitVotee);
                 this.erreurGlobale = 'Le réseau a coupé : votre vote n’a pas été pris en compte. Réessayez.';
+            } finally {
+                delete this.enVol[photoId];
             }
         },
 
+        /** Ajoute ou retire la photo de mes votes, sans jamais de doublon. */
+        appliquerVote(photoId, votee) {
+            const sansCettePhoto = this.mesVotes.filter((id) => id !== photoId);
+            this.mesVotes = votee ? [...sansCettePhoto, photoId] : sansCettePhoto;
+        },
+
         /**
-         * Confirmation explicite après chaque vote : message nominatif
-         * (enregistré ou transféré) pendant 2,5 s + légère vibration.
+         * Confirmation explicite après chaque appui : message nominatif
+         * (enregistré ou retiré) pendant 2,5 s + légère vibration.
          * Aucun écran en plus, aucune action à faire.
          */
-        confirmerVote(photoId, votePrecedent) {
+        confirmerVote(photoId) {
             if (navigator.vibrate) {
                 navigator.vibrate(30);
             }
 
             const nom = (this.photos.find((photo) => photo.id === photoId) || {}).nom;
-            this.messageVote = votePrecedent
-                ? 'Vote transféré à ' + nom + ' ✓'
-                : 'Vote enregistré pour ' + nom + ' ✓';
+            this.messageVote = this.estVote(photoId)
+                ? 'Vote enregistré pour ' + nom + ' ✓'
+                : 'Vote retiré pour ' + nom;
 
             this.confirmationVote = true;
             clearTimeout(this.minuterieConfirmation);
@@ -275,27 +297,20 @@ export default function galerie() {
             }, 2500);
         },
 
-        /** Le nom du vote, même si sa photo n'est pas parmi celles chargées. */
-        nomDeMonVote() {
-            if (!this.monVote) {
-                return null;
-            }
-
-            const photo = this.photos.find((candidate) => candidate.id === this.monVote);
-
-            return photo ? photo.nom : this.monVoteNom;
-        },
-
         /** Consigne d'en-tête : suit la phase reçue au polling. */
         texteEntete() {
             return this.peutVoter
-                ? 'Touchez une photo pour voter. Vous pouvez changer d’avis à tout moment.'
+                ? 'Touchez toutes les photos qui vous plaisent. Un appui de plus retire le vote.'
                 : 'Les votes sont fermés pour le moment.';
         },
 
-        /** Ligne principale de la barre fixe : mon vote, ou la consigne du moment. */
+        /** Ligne principale de la barre fixe : mes votes, ou la consigne du moment. */
         texteBarre() {
-            return this.nomDeMonVote() ?? (this.peutVoter ? 'Touchez une photo pour voter' : 'Votes fermés');
+            if (this.mesVotes.length) {
+                return this.mesVotes.length > 1 ? 'photos choisies' : 'photo choisie';
+            }
+
+            return this.peutVoter ? 'Touchez les photos qui vous plaisent' : 'Votes fermés';
         },
     };
 }

@@ -23,16 +23,16 @@ class GalleryController extends Controller
 
         $photos = GalleryCache::photos();
         $initiales = array_reverse(array_slice($photos, -self::PAGE_SIZE));
-        $vote = $guestSession->vote;
 
         return view('tembo.galerie', [
             'phase' => EventPhase::current(),
             'photosInitiales' => $initiales,
             'complet' => count($photos) <= self::PAGE_SIZE,
-            'monVote' => $vote?->photo_id,
-            // Le nom accompagne l'id : la barre fixe doit pouvoir nommer un
-            // vote porté sur une photo absente des 30 premières chargées.
-            'monVoteNom' => $vote?->photo?->display_name,
+            // Autant de votes que l'invité veut, un par photo : la grille doit
+            // savoir marquer chacune des photos qu'il a déjà choisies.
+            'mesVotes' => $guestSession->votes()->pluck('photo_id')->all(),
+            // Sa propre photo n'est pas votable : le bouton doit être inerte
+            // avant l'appui, pas refusé après.
             'maPhotoId' => $guestSession->photo?->id,
         ]);
     }
@@ -93,8 +93,10 @@ class GalleryController extends Controller
     }
 
     /**
-     * Classement invité : le Top 5 dans l'ordre, sans les totaux de votes —
-     * les chiffres ne vivent que sur le mur LED (anti effet de meute).
+     * Classement invité : le Top 5 avec le nombre de votes de chaque photo
+     * (décision client du 20/08/2026, au nom de la transparence). La galerie,
+     * elle, reste sans chiffres : c'est là que se créerait l'effet de meute,
+     * au moment où l'invité choisit.
      */
     public function ranking(Request $request): View
     {

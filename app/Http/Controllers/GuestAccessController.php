@@ -89,7 +89,7 @@ class GuestAccessController extends Controller
         return view('tembo.accueil', [
             'phase' => EventPhase::current(),
             'photo' => $guestSession->photo,
-            'vote' => $guestSession->vote?->photo,
+            'mesVotesCount' => $guestSession->votes()->count(),
             'publishedCount' => count(GalleryCache::photos()),
         ]);
     }

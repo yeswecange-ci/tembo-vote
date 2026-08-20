@@ -34,7 +34,7 @@
                 <p class="mt-2 font-mono text-14 text-or-clair">14 août 2026 · Kinshasa</p>
             </div>
             <p class="max-w-xs text-14 text-ivoire-bas">
-                Un selfie avec votre Tembo, un vote, un gagnant révélé sur scène.
+                Un selfie avec votre Tembo, vos votes, un gagnant révélé sur scène.
             </p>
         </header>
 
@@ -60,7 +60,7 @@
             <div>
                 @if ($phase->allowsVoting())
                     <x-bouton variante="secondaire" :href="route('galerie.index')" class="min-h-14 w-full">
-                        {{ $vote !== null ? 'Voir la galerie' : 'Voter' }}
+                        {{ $mesVotesCount > 0 ? 'Voir la galerie' : 'Voter' }}
                     </x-bouton>
                     @if ($publishedCount > 0)
                         <p class="mt-3 text-center text-12 text-ivoire-bas">
@@ -85,7 +85,7 @@
         </div>
 
         {{-- Votre soirée : où en est l'invité, en images et d'un coup d'œil --}}
-        @if ($photo !== null || $vote !== null)
+        @if ($photo !== null || $mesVotesCount > 0)
             <div class="rounded border border-nuit-bord bg-nuit-haut p-4">
                 <h2 class="text-14 font-medium text-ivoire-bas">Votre soirée</h2>
                 <div class="mt-3 space-y-3">
@@ -112,22 +112,23 @@
                         </a>
                     @endif
 
-                    @if ($vote !== null)
+                    @if ($mesVotesCount > 0)
+                        {{-- Plusieurs votes possibles : un compte plutôt qu'une vignette --}}
                         <a
                             href="{{ route('galerie.index') }}"
                             class="flex min-h-11 items-center gap-3 rounded border border-nuit-bord p-2 transition-opacity hover:opacity-85 active:opacity-70"
                         >
-                            <img
-                                src="{{ $vote->signedImageUrl('vignette') }}"
-                                alt="Photo de {{ $vote->display_name }}"
-                                class="size-12 shrink-0 rounded bg-nuit object-cover"
-                            >
+                            <span class="flex size-12 shrink-0 items-center justify-center rounded border border-or bg-nuit font-mono text-20 text-or-clair">
+                                {{ $mesVotesCount }}
+                            </span>
                             <span class="min-w-0 flex-1">
-                                <span class="block text-14 font-medium text-ivoire">Mon vote</span>
-                                <span class="block truncate text-12 text-ivoire-bas">{{ $vote->display_name }}</span>
+                                <span class="block text-14 font-medium text-ivoire">Mes votes</span>
+                                <span class="block truncate text-12 text-ivoire-bas">
+                                    {{ $mesVotesCount > 1 ? 'photos choisies' : 'photo choisie' }}
+                                </span>
                             </span>
                             @if ($phase->allowsVoting())
-                                <span class="shrink-0 text-12 text-ivoire-bas">Changer ›</span>
+                                <span class="shrink-0 text-12 text-ivoire-bas">Modifier ›</span>
                             @endif
                         </a>
                     @endif
@@ -156,8 +157,8 @@
                 <li class="flex gap-4">
                     <span class="font-mono text-20 leading-none text-or-clair">3</span>
                     <div>
-                        <p class="text-14 font-medium text-ivoire">Votez pour la photo de la soirée</p>
-                        <p class="mt-1 text-12 text-ivoire-bas">Un appui suffit, vous pouvez changer d’avis. Le gagnant est révélé sur scène.</p>
+                        <p class="text-14 font-medium text-ivoire">Votez pour les photos qui vous plaisent</p>
+                        <p class="mt-1 text-12 text-ivoire-bas">Autant de photos que vous voulez, sauf la vôtre. Un appui de plus retire le vote.</p>
                     </div>
                 </li>
             </ol>

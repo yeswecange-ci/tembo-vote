@@ -16,9 +16,11 @@ use Illuminate\Validation\ValidationException;
 class VoteController extends Controller
 {
     /**
-     * Un seul vote actif par session, changeable à volonté : updateOrCreate,
-     * jamais d'insertion en doublon (contrainte UNIQUE en base en dernier
-     * rempart). Le compteur dénormalisé bouge dans la même transaction.
+     * Décision client du 20/08/2026 : l'invité vote pour autant de photos qu'il
+     * veut, une seule fois par photo, et jamais pour la sienne. Un second appui
+     * sur la même photo retire le vote — sur une grille tactile, un appui
+     * malencontreux doit pouvoir se défaire. Le compteur dénormalisé bouge dans
+     * la même transaction que le vote.
      */
     public function store(Request $request): JsonResponse
     {
@@ -48,28 +50,45 @@ class VoteController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($guestSession, $photo, $request): void {
-            $vote = Vote::query()
+        if ($photo->guest_session_id === $guestSession->id) {
+            throw ValidationException::withMessages([
+                'photo_id' => 'Vous ne pouvez pas voter pour votre propre photo. Choisissez celle d’un autre invité.',
+            ]);
+        }
+
+        $vote = DB::transaction(function () use ($guestSession, $photo, $request): bool {
+            // Verrou sur la session et non sur le vote : la ligne à créer
+            // n'existe pas encore, et deux appuis simultanés sur la même photo
+            // se présenteraient sinon en même temps devant l'index unique.
+            GuestSession::query()->whereKey($guestSession->id)->lockForUpdate()->first();
+
+            $existant = Vote::query()
                 ->where('guest_session_id', $guestSession->id)
-                ->lockForUpdate()
+                ->where('photo_id', $photo->id)
                 ->first();
 
-            if ($vote !== null && $vote->photo_id === $photo->id) {
-                return; // même photo : rien à changer
+            if ($existant !== null) {
+                $existant->delete();
+                Photo::query()->whereKey($photo->id)->where('votes_count', '>', 0)->decrement('votes_count');
+
+                return false;
             }
 
-            if ($vote !== null) {
-                Photo::query()->whereKey($vote->photo_id)->where('votes_count', '>', 0)->decrement('votes_count');
-            }
-
-            Vote::query()->updateOrCreate(
-                ['guest_session_id' => $guestSession->id],
-                ['photo_id' => $photo->id, 'device_hash' => Fingerprint::device($request)],
-            );
+            Vote::query()->create([
+                'guest_session_id' => $guestSession->id,
+                'photo_id' => $photo->id,
+                'device_hash' => Fingerprint::device($request),
+            ]);
 
             Photo::query()->whereKey($photo->id)->increment('votes_count');
+
+            return true;
         });
 
-        return response()->json(['vote' => $photo->id]);
+        return response()->json([
+            'photo_id' => $photo->id,
+            // true : vote enregistré · false : vote retiré
+            'vote' => $vote,
+        ]);
     }
 }

@@ -3,8 +3,9 @@
 @endphp
 
 {{--
-    Classement invité : le Top 5 dans l'ordre, sans les totaux de votes —
-    les chiffres ne vivent que sur le mur LED.
+    Classement invité : le Top 5 avec le nombre de votes de chaque photo
+    (décision client du 20/08/2026, au nom de la transparence). La galerie
+    reste sans chiffres : l'effet de meute se joue au moment du choix.
 --}}
 <x-layouts.guest title="Classement">
     <div class="flex min-h-full flex-col gap-6 py-6">
@@ -18,7 +19,7 @@
                 @elseif ($phase === Phase::Closed)
                     Le Top 5 final de la soirée. Merci d’avoir participé.
                 @else
-                    Le Top 5 de la soirée. Les compteurs vivent sur l’écran de la salle.
+                    Le Top 5 de la soirée, votes en direct.
                 @endif
             </p>
         </header>
@@ -55,6 +56,11 @@
                             loading="lazy"
                         >
                         <p class="min-w-0 flex-1 truncate text-16 font-medium text-ivoire">{{ $photo->display_name }}</p>
+                        {{-- Compteur en JetBrains Mono, comme au mur LED --}}
+                        <p class="shrink-0 text-right">
+                            <span class="block font-mono text-20 leading-none text-ivoire">{{ $photo->votes_count }}</span>
+                            <span class="block text-12 text-ivoire-bas">{{ $photo->votes_count > 1 ? 'votes' : 'vote' }}</span>
+                        </p>
                     </li>
                 @endforeach
             </ol>

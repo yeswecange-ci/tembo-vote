@@ -2,6 +2,7 @@
 
 use App\Enums\Phase;
 use App\Models\AuditLog;
+use App\Models\GuestSession;
 use App\Models\Photo;
 use App\Models\Setting;
 use App\Models\User;
@@ -30,6 +31,45 @@ it('affiche le Top 5 avec les compteurs et signale les votes suspects', function
         ->assertSeeInOrder(['Suspecte', 'Saine'])
         ->assertSee('2 votes suspects')
         ->assertSee('aucun vote suspect');
+});
+
+it('ne signale pas l’invité qui vote pour plusieurs photos', function () {
+    // Depuis le multi-vote, plusieurs votes sous la même empreinte sont la
+    // norme : les signaler noierait la relecture humaine sous de faux positifs.
+    $session = GuestSession::factory()->create();
+    $memeTelephone = hash('sha256', 'un-seul-telephone');
+    $photos = Photo::factory()->approved()->count(2)->create();
+
+    foreach ($photos as $photo) {
+        Vote::factory()->create([
+            'guest_session_id' => $session->id,
+            'photo_id' => $photo->id,
+            'device_hash' => $memeTelephone,
+        ]);
+    }
+
+    $reponse = $this->actingAs($this->moderator)->get(route('regie.revelation'))->assertOk();
+
+    expect(substr_count($reponse->content(), 'aucun vote suspect'))->toBe(2)
+        ->and($reponse->content())->not->toContain('votes suspects');
+});
+
+it('signale une même empreinte derrière deux sessions invité', function () {
+    $memeTelephone = hash('sha256', 'telephone-a-deux-sessions');
+    $photo = Photo::factory()->approved()->create(['display_name' => 'Cible']);
+
+    // Deux sessions, donc deux droits de vote, depuis le même appareil
+    foreach (GuestSession::factory()->count(2)->create() as $session) {
+        Vote::factory()->create([
+            'guest_session_id' => $session->id,
+            'photo_id' => $photo->id,
+            'device_hash' => $memeTelephone,
+        ]);
+    }
+
+    $this->actingAs($this->moderator)->get(route('regie.revelation'))
+        ->assertOk()
+        ->assertSee('2 votes suspects');
 });
 
 it('refuse de valider tant que les votes ne sont pas clos', function () {

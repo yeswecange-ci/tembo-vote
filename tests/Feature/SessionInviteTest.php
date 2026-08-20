@@ -71,8 +71,11 @@ it('présente un accueil riche : comment ça marche, ma participation, ambiance'
         ->get(route('tembo.accueil'))
         ->assertSee('Comment ça marche')
         ->assertSee('Votre soirée')
-        ->assertSee('Mon vote')
-        ->assertSee('Aïcha')
+        ->assertSee('Mes votes')
+        // Plusieurs votes possibles : l'accueil en donne le compte, il ne peut
+        // plus nommer arbitrairement l'une des photos choisies
+        ->assertSee('photo choisie')
+        ->assertDontSee('Aïcha')
         ->assertSee('déjà dans la galerie');
 });
 

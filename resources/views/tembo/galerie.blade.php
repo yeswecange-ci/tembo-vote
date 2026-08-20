@@ -1,7 +1,8 @@
 {{--
-    Galerie 2 colonnes : un appui sur une photo = un vote (changeable).
-    Les totaux de votes ne sont jamais affichés ici — anti effet de meute,
-    les chiffres ne vivent que sur le mur LED.
+    Galerie 2 colonnes : un appui = un vote, un second appui le retire, autant
+    de photos que l'invité veut. Sa propre photo n'est pas votable.
+    Les totaux de votes ne sont jamais affichés ici — anti effet de meute au
+    moment du choix. Les chiffres vivent sur le mur LED et au classement.
 --}}
 <x-layouts.guest title="Galerie">
     <div
@@ -11,8 +12,7 @@
         data-initial="{{ json_encode([
             'photos' => $photosInitiales,
             'complet' => $complet,
-            'monVote' => $monVote,
-            'monVoteNom' => $monVoteNom,
+            'mesVotes' => $mesVotes,
             'maPhotoId' => $maPhotoId,
             'peutVoter' => $phase->allowsVoting(),
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}"
@@ -24,7 +24,7 @@
                 {{-- x-text : la consigne suit la phase, que le polling rafraîchit toutes les 3 s --}}
                 <p class="mt-2 text-14 text-ivoire-bas" x-text="texteEntete()">
                     @if ($phase->allowsVoting())
-                        Touchez une photo pour voter. Vous pouvez changer d’avis à tout moment.
+                        Touchez toutes les photos qui vous plaisent. Un appui de plus retire le vote.
                     @else
                         Les votes sont fermés pour le moment.
                     @endif
@@ -79,9 +79,9 @@
                     <button
                         type="button"
                         class="block w-full overflow-hidden rounded text-left transition-opacity hover:opacity-90 active:opacity-75"
-                        :class="monVote === photo.id ? 'border-2 border-rouge' : 'border border-nuit-bord'"
-                        :disabled="!peutVoter"
-                        :aria-pressed="monVote === photo.id"
+                        :class="estVote(photo.id) ? 'border-2 border-rouge' : 'border border-nuit-bord'"
+                        :disabled="!peutVoter || photo.id === maPhotoId"
+                        :aria-pressed="estVote(photo.id)"
                         x-on:click="voter(photo.id)"
                     >
                         <img
@@ -92,7 +92,9 @@
                         >
                         <span class="flex min-h-9 items-center justify-between gap-2 bg-nuit-haut px-3 py-2">
                             <span class="truncate text-14 font-medium text-ivoire" x-text="photo.nom"></span>
-                            <span x-show="monVote === photo.id" x-cloak class="shrink-0 text-12 font-medium text-rouge">Mon vote</span>
+                            <span x-show="estVote(photo.id)" x-cloak class="shrink-0 text-12 font-medium text-rouge">Voté</span>
+                            {{-- Sa propre photo : dire pourquoi elle ne réagit pas à l'appui --}}
+                            <span x-show="photo.id === maPhotoId" x-cloak class="shrink-0 text-12 text-ivoire-bas">Votre photo</span>
                         </span>
                     </button>
                 </li>
@@ -127,10 +129,14 @@
                         <p
                             class="text-12"
                             :class="confirmationVote ? 'text-or-clair' : 'text-ivoire-bas'"
-                            x-text="confirmationVote ? 'Vote enregistré ✓' : (monVote ? 'Mon vote' : 'Galerie')"
+                            x-text="confirmationVote ? 'Vote enregistré ✓' : (mesVotes.length ? 'Mes votes' : 'Galerie')"
                         ></p>
-                        <p class="truncate text-16 font-medium text-ivoire" x-text="texteBarre()">
-                            {{ $monVoteNom ?? ($phase->allowsVoting() ? 'Touchez une photo pour voter' : 'Votes fermés') }}
+                        {{-- Le compte en JetBrains Mono : c'est un compteur, comme au mur LED --}}
+                        <p class="truncate text-16 font-medium text-ivoire">
+                            <span x-show="mesVotes.length" x-cloak class="font-mono" x-text="mesVotes.length"></span>
+                            <span x-text="texteBarre()">{{ count($mesVotes) > 0
+                                ? (count($mesVotes) > 1 ? 'photos choisies' : 'photo choisie')
+                                : ($phase->allowsVoting() ? 'Touchez les photos qui vous plaisent' : 'Votes fermés') }}</span>
                         </p>
                     </div>
                     <x-bouton variante="secondaire" :href="route('classement')" class="shrink-0">Classement</x-bouton>

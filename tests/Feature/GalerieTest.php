@@ -33,7 +33,7 @@ it('affiche la galerie avec la barre fixe et l’accès au classement', function
         ->get(route('galerie.index'))
         ->assertOk()
         ->assertSee('Classement')
-        ->assertSee('Touchez une photo pour voter')
+        ->assertSee('Touchez toutes les photos qui vous plaisent. Un appui de plus retire le vote.')
         ->assertSee('Aïcha');
 });
 
@@ -151,28 +151,48 @@ function voter($test, Photo $photo)
 it('enregistre un vote et incrémente le compteur dénormalisé', function () {
     $photo = Photo::factory()->approved()->create();
 
-    voter($this, $photo)->assertOk()->assertJson(['vote' => $photo->id]);
+    voter($this, $photo)->assertOk()->assertJson(['photo_id' => $photo->id, 'vote' => true]);
 
     expect(Vote::query()->count())->toBe(1)
         ->and($photo->refresh()->votes_count)->toBe(1);
 });
 
-it('ne compte qu’un vote actif par session, changeable', function () {
-    $premiere = Photo::factory()->approved()->create();
-    $seconde = Photo::factory()->approved()->create();
+it('accepte autant de votes que l’invité veut, un par photo', function () {
+    $photos = Photo::factory()->approved()->count(3)->create();
 
-    voter($this, $premiere)->assertOk();
-    // Re-voter la même photo ne change rien
-    voter($this, $premiere)->assertOk();
-    expect(Vote::query()->count())->toBe(1)
-        ->and($premiere->refresh()->votes_count)->toBe(1);
+    foreach ($photos as $photo) {
+        voter($this, $photo)->assertOk()->assertJson(['vote' => true]);
+    }
 
-    // Changer de vote : décrément de l'ancienne, incrément de la nouvelle
-    voter($this, $seconde)->assertOk();
+    expect(Vote::query()->count())->toBe(3)
+        ->and($photos->map(fn (Photo $photo): int => $photo->refresh()->votes_count)->all())->toBe([1, 1, 1]);
+});
+
+it('retire le vote au second appui sur la même photo', function () {
+    $photo = Photo::factory()->approved()->create();
+
+    voter($this, $photo)->assertOk()->assertJson(['vote' => true]);
+    // Un appui malencontreux doit pouvoir se défaire
+    voter($this, $photo)->assertOk()->assertJson(['vote' => false]);
+
+    expect(Vote::query()->count())->toBe(0)
+        ->and($photo->refresh()->votes_count)->toBe(0);
+
+    // Et se refaire
+    voter($this, $photo)->assertOk()->assertJson(['vote' => true]);
     expect(Vote::query()->count())->toBe(1)
-        ->and($premiere->refresh()->votes_count)->toBe(0)
-        ->and($seconde->refresh()->votes_count)->toBe(1)
-        ->and(Vote::query()->sole()->photo_id)->toBe($seconde->id);
+        ->and($photo->refresh()->votes_count)->toBe(1);
+});
+
+it('refuse le vote pour sa propre photo', function () {
+    $sienne = Photo::factory()->approved()->create(['guest_session_id' => $this->guestSession->id]);
+
+    $reponse = voter($this, $sienne);
+
+    $reponse->assertStatus(422);
+    expect($reponse->json('errors.photo_id.0'))->toContain('votre propre photo')
+        ->and(Vote::query()->count())->toBe(0)
+        ->and($sienne->refresh()->votes_count)->toBe(0);
 });
 
 it('refuse de voter pour une photo hors galerie', function () {
@@ -195,19 +215,20 @@ it('refuse le vote hors des phases open et vote_only', function () {
     voter($this, $photo)->assertOk();
 });
 
-it('limite à 10 votes par minute et par session', function () {
-    $photos = Photo::factory()->approved()->count(11)->create();
+it('limite le martelage à 60 appuis par minute et par session', function () {
+    // Le même appui répété suffit : la limite compte les requêtes, pas les votes
+    $photo = Photo::factory()->approved()->create();
 
-    foreach ($photos->take(10) as $photo) {
+    for ($appui = 0; $appui < 60; $appui++) {
         voter($this, $photo)->assertOk();
     }
 
-    voter($this, $photos->last())->assertStatus(429);
+    voter($this, $photo)->assertStatus(429);
 });
 
 // ----- Classement invité -----
 
-it('classe le Top 5 par votes sans afficher les compteurs', function () {
+it('classe le Top 5 par votes en affichant les compteurs', function () {
     $photos = Photo::factory()->approved()->count(6)->create();
     // votes_count n'est volontairement pas fillable : forceFill dans le test
     $photos[3]->forceFill(['votes_count' => 9, 'display_name' => 'Meneuse'])->save();
@@ -216,11 +237,34 @@ it('classe le Top 5 par votes sans afficher les compteurs', function () {
     $reponse = $this->withCookie(EnsureGuestSession::COOKIE, $this->guestSession->id)
         ->get(route('classement'))
         ->assertOk()
-        ->assertSeeInOrder(['Meneuse', 'Seconde'])
+        // Transparence demandée par le client : le compteur de chaque photo
+        ->assertSeeInOrder(['Meneuse', '9', 'votes', 'Seconde', '4', 'votes'])
+        ->assertSee('vote')
         ->assertDontSee('votes_count');
 
     // 6 photos publiées, mais seulement 5 au classement
     expect(substr_count($reponse->content(), 'rounded-full'))->toBe(5);
+});
+
+it('n’affiche aucun compteur dans la galerie, seulement au classement', function () {
+    $photo = Photo::factory()->approved()->create(['display_name' => 'Meneuse']);
+    $photo->forceFill(['votes_count' => 42])->save();
+    GalleryCache::invalidate();
+
+    // L'effet de meute se joue au moment du choix : la grille reste muette.
+    // Le compte n'est cherché ni dans le corps ni dans l'état initial d'Alpine
+    // (assertDontSee sur « 42 » serait instable : la signature d'URL en
+    // contient au hasard).
+    $reponse = $this->withCookie(EnsureGuestSession::COOKIE, $this->guestSession->id)
+        ->get(route('galerie.index'))
+        ->assertOk()
+        ->assertSee('Meneuse');
+
+    expect($reponse->content())->not->toContain('votes_count')
+        ->and($reponse->content())->not->toContain('&quot;votes&quot;')
+        ->and(requeteGalerie($this)->json('photos.0'))
+        ->toHaveKeys(['id', 'nom', 'vignette', 'curseur'])
+        ->and(requeteGalerie($this)->json('photos.0'))->not->toHaveKey('votes');
 });
 
 // ----- Phase et galerie -----
@@ -268,22 +312,27 @@ it('rend son vote à l’invité dont la photo votée a été retirée', functio
         ->and(Vote::query()->sole()->photo_id)->toBe($autre->id);
 });
 
-it('nomme le vote même quand sa photo est hors de la page initiale', function () {
-    $ancienne = Photo::factory()->approved()->create(['display_name' => 'Aïcha', 'created_at' => now()->subHour()]);
-    Photo::factory()->approved()->count(30)->create(['display_name' => 'Autre']);
+it('marque toutes mes photos votées, y compris hors de la page initiale', function () {
+    $ancienne = Photo::factory()->approved()->create(['created_at' => now()->subHour()]);
+    $recente = Photo::factory()->approved()->count(30)->create()->last();
     GalleryCache::invalidate();
 
-    Vote::factory()->create([
-        'guest_session_id' => $this->guestSession->id,
-        'photo_id' => $ancienne->id,
-    ]);
+    foreach ([$ancienne, $recente] as $photo) {
+        Vote::factory()->create([
+            'guest_session_id' => $this->guestSession->id,
+            'photo_id' => $photo->id,
+        ]);
+    }
 
-    // Les 30 photos chargées ne contiennent pas la sienne : le nom doit venir
-    // du serveur, sans quoi la barre fixe annonce « Mon vote » sans nom.
-    $this->withCookie(EnsureGuestSession::COOKIE, $this->guestSession->id)
+    // La barre fixe compte mes votes même quand une des photos n'est pas
+    // dans les 30 chargées : les ids partent du serveur, pas de la grille.
+    $reponse = $this->withCookie(EnsureGuestSession::COOKIE, $this->guestSession->id)
         ->get(route('galerie.index'))
-        ->assertOk()
-        ->assertSee('Aïcha');
+        ->assertOk();
+
+    expect($reponse->content())->toContain($ancienne->id)
+        ->and($reponse->content())->toContain($recente->id)
+        ->and($reponse->content())->toContain('photos choisies');
 });
 
 it('signale au polling les photos retirées de la galerie', function () {

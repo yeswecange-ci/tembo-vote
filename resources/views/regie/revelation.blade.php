@@ -85,8 +85,10 @@
                 </ol>
 
                 <p class="mt-3 text-12 text-ivoire-bas">
-                    Suspect = plusieurs votes émis depuis la même empreinte d'appareil (même modèle + même réseau
-                    peuvent se confondre). Rien n'est bloqué automatiquement : c'est votre relecture qui fait foi.
+                    Suspect = une même empreinte d'appareil derrière plusieurs sessions invité, donc plusieurs
+                    droits de vote (même modèle + même réseau peuvent aussi se confondre). Voter pour plusieurs
+                    photos est normal et n'est jamais signalé. Rien n'est bloqué automatiquement : c'est votre
+                    relecture qui fait foi.
                     Pour disqualifier une photo, retirez-la depuis « Publiées », le classement se recalcule.
                 </p>
             @endif

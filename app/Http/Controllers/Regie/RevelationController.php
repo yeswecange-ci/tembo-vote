@@ -27,12 +27,15 @@ class RevelationController extends Controller
     {
         $top = $this->topFive();
 
-        // Votes suspects : plusieurs votes émis depuis la même empreinte
-        // d'appareil. L'index ne bloque jamais — il signale, l'humain juge.
+        // Votes suspects : une même empreinte d'appareil derrière plusieurs
+        // sessions invité. Depuis le multi-vote, compter les votes d'une même
+        // empreinte ne signale plus rien — c'est devenu le comportement normal.
+        // Ce qui reste anormal, c'est un téléphone qui s'est ouvert plusieurs
+        // droits de vote. L'index ne bloque jamais : il signale, l'humain juge.
         $duplicatedHashes = Vote::query()
             ->select('device_hash')
             ->groupBy('device_hash')
-            ->havingRaw('count(*) > 1')
+            ->havingRaw('count(distinct guest_session_id) > 1')
             ->pluck('device_hash');
 
         $suspectCounts = $duplicatedHashes->isEmpty() ? collect() : Vote::query()
